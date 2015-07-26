@@ -88,7 +88,9 @@ public class Assimp {
 	}
 	
 	public static class aiVector3D extends Pointer {
-		
+		@MemberGetter public native @ByVal float x();
+		@MemberGetter public native @ByVal float y();
+		@MemberGetter public native @ByVal float z();
 	}
 //	
 //	public static class aiQuaternion extends Pointer{
