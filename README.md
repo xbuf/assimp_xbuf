@@ -3,7 +3,7 @@ WIP WIP WIP
 
 # assimp_xbuf
 
-A set of lib, tools to use [Assimp (Open Asset Import Library)](http://assimp.sourceforge.net) with [xbuf](http://xbuf.org).
+A set of libs, tools to use [Assimp (Open Asset Import Library)](http://assimp.sourceforge.net) with [xbuf](http://xbuf.org).
 
 I’m not enough skilled to provide the importer/exporter for xbuf to assimp, But I can try to create some tools and lib to help xbuf’s users to use assimp.
 

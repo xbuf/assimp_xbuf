@@ -1,0 +1,66 @@
+version = "3.1.1"
+group = "org.xbuf"
+def description = "a package with assimp's native libs"
+
+configurations {
+	javacpp
+}
+
+def pomConfig = {
+	licenses {
+		license {
+			name "BSD 3-Clause"
+			url "http://assimp.sourceforge.net/main_license.html"
+			distribution "repo"
+		}
+	}
+	developers {
+		developer {
+			id "davidB"
+			name "David Bernard"
+		}
+	}
+}
+
+task sourcesJar(type: Jar) {
+	from sourceSets.main.allSource
+	classifier = 'sources'
+}
+
+publishing {
+	publications {
+		mavenStuff(MavenPublication) {
+			from components.java
+			artifact sourcesJar
+			pom.withXml {
+				def root = asNode()
+				root.appendNode('description', description)
+				root.children().last() + pomConfig
+			}
+		}
+	}
+}
+
+bintray {
+	user = bintray_user
+	key = bintray_api_key
+
+	publications = ['mavenStuff'] //When uploading Maven-based publication files
+	//dryRun = false //Whether to run this as dry-run, without deploying
+	publish = true //If version should be auto published after an upload
+	pkg {
+		repo = 'maven'
+		name = project.name
+		desc = description
+		websiteUrl = "https://github.com/davidB/${project.name}"
+		issueTrackerUrl = "https://github.com/davidB/${project.name}/issues"
+		vcsUrl = "https://github.com/davidB/${project.name}.git"
+		licenses = ['BSD 3-Clause']
+		labels = ['jme3']
+		publicDownloadNumbers = true
+		version {
+			name = project.version
+			vcsTag = project.version
+		}
+	}
+}
