@@ -1,0 +1,2 @@
+include 'assimp_lib', 'assimp4java'
+//include 'assimp2xbuf'

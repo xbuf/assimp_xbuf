@@ -1,0 +1,46 @@
+def description = "A java wrapper for assimp, to load asset. (the lib is under CC0-1 but assimp is under 3-clause BSD)"
+
+configurations {
+	javacpp
+}
+
+dependencies {
+    javacpp group: 'org.bytedeco', name: 'javacpp', version: '1.0'
+    compile group: 'org.bytedeco', name: 'javacpp', version: '1.0'
+    runtime project(':assimp_lib')
+}
+
+task javacpp(type: JavaExec) {
+    description = 'generate code with javacpp'
+    group = 'javacpp'
+    main = 'org.bytedeco.javacpp.tools.Builder'
+    classpath = configurations.javacpp
+
+    // Copyright (C) 2011-2015 Samuel Audet <samuel.audet@gmail.com>
+    // Project site: https://github.com/bytedeco/javacpp
+    //
+    // Usage: java -jar javacpp.jar [options] [class or package (suffixed with .* or .**)]
+    //
+    // where options include:
+    //
+    //     -classpath <path>      Load user classes from path
+    //     -d <directory>         Output all generated files to directory
+    //     -o <name>              Output everything in a file named after given name
+    //     -nocompile             Do not compile or delete the generated source files
+    //     -header                Generate header file with declarations of callbacks functions
+    //     -copylibs              Copy to output directory dependent libraries (link and preload)
+    //     -jarprefix <prefix>    Also create a JAR file named "<prefix>-<platform>.jar"
+    //     -properties <resource> Load all properties from resource
+    //     -propertyfile <file>   Load all properties from file
+    //     -D<property>=<value>   Set property to value
+    //     -Xcompiler <option>    Pass option directly to compiler
+    args = ['-classpath', sourceSets.main.output.classesDir, '-Xcompiler', "-I${project.file('src/main/headers')}", 'assimp.*']
+}
+javacpp.dependsOn(classes)
+jar.dependsOn(javacpp)
+
+task demo(type: JavaExec) {
+    main = 'sandbox.MainLoad_md5'
+    classpath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
+}
+demo.dependsOn(javacpp, compileTestJava)

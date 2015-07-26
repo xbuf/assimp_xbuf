@@ -1,0 +1,25 @@
+version = "3.1.1"
+group = "org.xbuf"
+def description = "a package with assimp's native libs"
+
+def pomConfig = {
+	licenses {
+		license {
+			name "BSD 3-Clause"
+			url "http://assimp.sourceforge.net/main_license.html"
+			distribution "repo"
+		}
+	}
+	developers {
+		developer {
+			id "davidB"
+			name "David Bernard"
+		}
+	}
+}
+
+bintray {
+	pkg {
+		licenses = ['BSD 3-Clause']
+	}
+}
