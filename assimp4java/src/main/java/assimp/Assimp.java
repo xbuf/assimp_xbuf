@@ -46,7 +46,90 @@ public class Assimp {
 	    public native boolean HasMaterials();
 	    public native boolean HasMeshes();
 	    public native boolean HasTextures();
+		@MemberGetter public native @Cast("aiMesh**") PointerPointer<aiMesh> mMeshes();
+		@MemberGetter public native int mNumMeshes();
+	    @MemberGetter public native aiNode mRootNode();
 	}
+	
+	public static class aiNode extends Pointer {
+		public native aiNode FindNode(String name);
+		@MemberGetter public native @Cast("aiNode**") PointerPointer<aiNode> mChildren();
+		@MemberGetter public native @Cast("unsigned int*") int[] mMeshes();
+		@MemberGetter public native @ByVal aiString mName();
+		@MemberGetter public native int mNumChildren();
+		@MemberGetter public native int mNumMeshes();
+		@MemberGetter public native aiNode mParent();
+		//@MemberGetter public native @ByVal aiMatrix4x4t<Float> mTransformation();
+		@MemberGetter public native @ByVal aiMatrix4x4 mTransformation();
+	}
+	
+	public static class aiString extends Pointer{
+		public native String C_Str();
+		@Override public String toString(){ return C_Str(); }
+	}
+	public static class aiMatrix4x4 extends Pointer {
+		@MemberGetter public native @ByVal float a1();
+		@MemberGetter public native @ByVal float a2();
+		@MemberGetter public native @ByVal float a3();
+		@MemberGetter public native @ByVal float a4();
+		@MemberGetter public native @ByVal float b1();
+		@MemberGetter public native @ByVal float b2();
+		@MemberGetter public native @ByVal float b3();
+		@MemberGetter public native @ByVal float b4();
+		@MemberGetter public native @ByVal float c1();
+		@MemberGetter public native @ByVal float c2();
+		@MemberGetter public native @ByVal float c3();
+		@MemberGetter public native @ByVal float c4();
+		@MemberGetter public native @ByVal float d1();
+		@MemberGetter public native @ByVal float d2();
+		@MemberGetter public native @ByVal float d3();
+		@MemberGetter public native @ByVal float d4();
+		//public native void Decompose(aiVector3 scaling, aiQuaternion rotation, aiVector3 position); 
+	}
+	
+	public static class aiVector3D extends Pointer {
+		
+	}
+//	
+//	public static class aiQuaternion extends Pointer{
+//		
+//	}
+
+	public static class aiMesh extends Pointer {
+		
+	}
+	
+	/*
+	public static class aiMatrix4x4t<T> extends Pointer {
+		@MemberGetter public native @ByVal T a1();
+		@MemberGetter public native @ByVal T a2();
+		@MemberGetter public native @ByVal T a3();
+		@MemberGetter public native @ByVal T a4();
+		@MemberGetter public native @ByVal T b1();
+		@MemberGetter public native @ByVal T b2();
+		@MemberGetter public native @ByVal T b3();
+		@MemberGetter public native @ByVal T b4();
+		@MemberGetter public native @ByVal T c1();
+		@MemberGetter public native @ByVal T c2();
+		@MemberGetter public native @ByVal T c3();
+		@MemberGetter public native @ByVal T c4();
+		@MemberGetter public native @ByVal T d1();
+		@MemberGetter public native @ByVal T d2();
+		@MemberGetter public native @ByVal T d3();
+		@MemberGetter public native @ByVal T d4();
+		
+		public native void Decompose(aiVector3t<T> scaling, aiQuaterniont<T> rotation, aiVector3t<T> position); 
+		
+	}
+
+	public static class aiVector3t<T> extends Pointer {
+		
+	}
+	
+	public static class aiQuaterniont<T> extends Pointer{
+		
+	}
+*/
 }
 
 
