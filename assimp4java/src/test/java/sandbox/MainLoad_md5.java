@@ -9,7 +9,10 @@ public class MainLoad_md5 {
 	public static void main(String[] args) {
 		Importer importer = new Importer();
 		aiScene scene = importer.ReadFile( "/home/dwayne/work/xbuf/samples/doom3/models/md5/monsters/hellknight/hellknight.md5mesh", 
-		        aiProcess_CalcTangentSpace       | 
+		        aiProcess_CalcTangentSpace       |
+		        aiProcess_FlipWindingOrder       |
+		        aiProcess_GenUVCoords            |
+		        //aiProcess_FlipUVs                |
 		        aiProcess_Triangulate            |
 		        aiProcess_JoinIdenticalVertices  |
 		        aiProcess_SortByPType);

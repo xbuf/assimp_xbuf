@@ -1,6 +1,5 @@
 package assimp;
 
-import java.nio.ByteBuffer;
 import org.bytedeco.javacpp.*;
 import org.bytedeco.javacpp.annotation.*;
 
@@ -96,11 +95,57 @@ public class Assimp {
 //	public static class aiQuaternion extends Pointer{
 //		
 //	}
-
-	public static class aiMesh extends Pointer {
-		
+	
+	public static class aiColor4D extends Pointer {
+		@MemberGetter public native @ByVal float a();
+		@MemberGetter public native @ByVal float b();
+		@MemberGetter public native @ByVal float g();
+		@MemberGetter public native @ByVal float r();
 	}
 	
+	public static class aiMesh extends Pointer {
+		public native @Cast("unsigned int") int GetNumColorChannels();	
+		public native @Cast("unsigned int") int GetNumUVChannels();
+		public native boolean HasBones();
+		public native boolean HasFaces();
+		public native boolean HasNormals();
+		public native boolean HasPositions();
+		public native boolean HasTangentsAndBitangents();
+		public native boolean HasTextureCoords(@Cast("unsigned int") int pIndex);
+		public native boolean HasVertexColors(@Cast("unsigned int") int pIndex);
+		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mBitangents();
+		@MemberGetter public native @Cast("aiBone**") PointerPointer<aiBone> mBones();
+		@MemberGetter public native @Cast("aiColor4D**") PointerPointer<aiColor4D> mColors();// [AI_MAX_NUMBER_OF_COLOR_SETS]
+		@MemberGetter public native @Cast("aiFace*") PointerPointer<aiFace>mFaces();
+		@MemberGetter public native @Cast("unsigned int") int mMaterialIndex();
+		@MemberGetter public native @ByVal aiString mName();
+		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mNormals();
+		@MemberGetter public native @Cast("unsigned int") int mNumBones();
+		@MemberGetter public native @Cast("unsigned int") int mNumFaces();
+		@MemberGetter public native @Cast("unsigned int*") int[] mNumUVComponents();// [AI_MAX_NUMBER_OF_TEXTURECOORDS]
+		@MemberGetter public native @Cast("unsigned int") int mNumVertices();
+		@MemberGetter public native @Cast("unsigned int") int mPrimitiveTypes();
+		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mTangents();
+		@MemberGetter public native @Cast("aiVector3D**") PointerPointer<aiVector3D> mTextureCoords(); //[AI_MAX_NUMBER_OF_TEXTURECOORDS]
+		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mVertices();
+	}
+	
+	public static class aiFace extends Pointer {
+		@MemberGetter public native @Cast("unsigned int *")int[] mIndices();
+	 	@MemberGetter public native @Cast("unsigned int") int mNumIndices();
+	}
+
+	public static class aiBone extends Pointer {
+		@MemberGetter public native @ByVal aiString mName();
+		@MemberGetter public native @Cast("unsigned int") int mNumWeights();
+		@MemberGetter public native @ByVal aiMatrix4x4 mOffsetMatrix();
+		@MemberGetter public native @Cast("aiVertexWeight*") PointerPointer<aiVertexWeight> mWeights();
+	}
+
+	public static class aiVertexWeight extends Pointer {
+		@MemberGetter public native @Cast("unsigned int")int mVertexId();
+		@MemberGetter public native float mWeight();
+	}
 	/*
 	public static class aiMatrix4x4t<T> extends Pointer {
 		@MemberGetter public native @ByVal T a1();
