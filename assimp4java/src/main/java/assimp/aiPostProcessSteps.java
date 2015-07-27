@@ -1,7 +1,7 @@
 package assimp;
 
 public class aiPostProcessSteps {
-	public static final int 
+ 
 
 		// -------------------------------------------------------------------------
 		/** <hr>Calculates the tangents and bitangents for the imported meshes. 
@@ -13,7 +13,7 @@ public class aiPostProcessSteps {
 		 * a maximum smoothing angle for the algorithm. However, usually you'll
 		 * want to leave it at the default value.
 		 */
-		aiProcess_CalcTangentSpace = 0x1,
+		public static final int aiProcess_CalcTangentSpace = 0x1;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Identifies and joins identical vertex data sets within all 
@@ -26,7 +26,7 @@ public class aiPostProcessSteps {
 		 * time. <b>If this flag is not specified</b>, no vertices are referenced by
 		 * more than one face and <b>no index buffer is required</b> for rendering.
 		 */
-		aiProcess_JoinIdenticalVertices = 0x2,
+		public static final int aiProcess_JoinIdenticalVertices = 0x2;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Converts all the imported data to a left-handed coordinate space. 
@@ -38,11 +38,11 @@ public class aiPostProcessSteps {
 	     * away from the viewer.
 		 *
 		 * You'll probably want to consider this flag if you use Direct3D for
-		 * rendering. The #aiProcess_ConvertToLeftHanded flag supersedes this
+		 * rendering. The #public static final int aiProcess_ConvertToLeftHanded flag supersedes this
 		 * setting and bundles all conversions typically required for D3D-based
 		 * applications.
 		 */
-		aiProcess_MakeLeftHanded = 0x4,
+		public static final int aiProcess_MakeLeftHanded = 0x4;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Triangulates all faces of all meshes. 
@@ -54,11 +54,11 @@ public class aiPostProcessSteps {
 		 * 'triangles only' with no other kinds of primitives, try the following
 		 * solution:
 		 * <ul>
-		 * <li>Specify both #aiProcess_Triangulate and #aiProcess_SortByPType </li>
+		 * <li>Specify both #public static final int aiProcess_Triangulate and #public static final int aiProcess_SortByPType </li>
 		 * <li>Ignore all point and line meshes when you process assimp's output</li>
 		 * </ul>
 		 */
-		aiProcess_Triangulate = 0x8,
+		public static final int aiProcess_Triangulate = 0x8;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Removes some parts of the data structure (animations, materials, 
@@ -78,13 +78,13 @@ public class aiPostProcessSteps {
 		 * This flag is a poor one, mainly because its purpose is usually
 	     * misunderstood. Consider the following case: a 3D model has been exported
 		 * from a CAD app, and it has per-face vertex colors. Vertex positions can't be
-		 * shared, thus the #aiProcess_JoinIdenticalVertices step fails to
+		 * shared, thus the #public static final int aiProcess_JoinIdenticalVertices step fails to
 		 * optimize the data because of these nasty little vertex colors.
 		 * Most apps don't even process them, so it's all for nothing. By using
 		 * this step, unneeded components are excluded as early as possible
 		 * thus opening more room for internal optimizations. 
 		 */
-		aiProcess_RemoveComponent = 0x10,
+		public static final int aiProcess_RemoveComponent = 0x10;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Generates normals for all faces of all meshes. 
@@ -94,11 +94,11 @@ public class aiPostProcessSteps {
 		 * they're usually already there. Face normals are shared between all points
 		 * of a single face, so a single point can have multiple normals, which
 		 * forces the library to duplicate vertices in some cases.
-		 * #aiProcess_JoinIdenticalVertices is *senseless* then.
+		 * #public static final int aiProcess_JoinIdenticalVertices is *senseless* then.
 		 *
-		 * This flag may not be specified together with #aiProcess_GenSmoothNormals.
+		 * This flag may not be specified together with #public static final int aiProcess_GenSmoothNormals.
 		 */
-		aiProcess_GenNormals = 0x20,
+		public static final int aiProcess_GenNormals = 0x20;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Generates smooth normals for all vertices in the mesh.
@@ -108,14 +108,14 @@ public class aiPostProcessSteps {
 		* they're usually already there. 
 		*
 		* This flag may not be specified together with 
-		* #aiProcess_GenNormals. There's a importer property, 
+		* #public static final int aiProcess_GenNormals. There's a importer property, 
 		* <tt>#AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE</tt> which allows you to specify
 		* an angle maximum for the normal smoothing algorithm. Normals exceeding
 		* this limit are not smoothed, resulting in a 'hard' seam between two faces.
 		* Using a decent angle here (e.g. 80 degrees) results in very good visual
 		* appearance.
 		*/
-		aiProcess_GenSmoothNormals = 0x40,
+		public static final int aiProcess_GenSmoothNormals = 0x40;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Splits large meshes into smaller sub-meshes.
@@ -134,7 +134,7 @@ public class aiPostProcessSteps {
 		* Note that splitting is generally a time-consuming task, but only if there's
 		* something to split. The use of this step is recommended for most users.
 		*/
-		aiProcess_SplitLargeMeshes = 0x80,
+		public static final int aiProcess_SplitLargeMeshes = 0x80;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Removes the node graph and pre-transforms all vertices with
@@ -155,7 +155,7 @@ public class aiPostProcessSteps {
 		* can be set to normalize the scene's spatial dimension to the -1...1
 		* range. 
 		*/
-		aiProcess_PreTransformVertices = 0x100,
+		public static final int aiProcess_PreTransformVertices = 0x100;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Limits the number of bones simultaneously affecting a single vertex
@@ -171,7 +171,7 @@ public class aiPostProcessSteps {
 		* If you intend to perform the skinning in hardware, this post processing 
 		* step might be of interest to you.
 		*/
-		aiProcess_LimitBoneWeights = 0x200,
+		public static final int aiProcess_LimitBoneWeights = 0x200;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Validates the imported scene data structure.
@@ -199,7 +199,7 @@ public class aiPostProcessSteps {
 		 * This post-processing step is not time-consuming. Its use is not
 		 * compulsory, but recommended. 
 		*/
-		aiProcess_ValidateDataStructure = 0x400,
+		public static final int aiProcess_ValidateDataStructure = 0x400;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Reorders triangles for better vertex cache locality.
@@ -214,13 +214,13 @@ public class aiPostProcessSteps {
 		 * be of interest to you. The <tt>#AI_CONFIG_PP_ICL_PTCACHE_SIZE</tt>
 		 * importer property can be used to fine-tune the cache optimization.
 		 */
-		aiProcess_ImproveCacheLocality = 0x800,
+		public static final int aiProcess_ImproveCacheLocality = 0x800;
 
 		// -------------------------------------------------------------------------
 		/** <hr>Searches for redundant/unreferenced materials and removes them.
 		 *
 		 * This is especially useful in combination with the 
-		 * #aiProcess_PretransformVertices and #aiProcess_OptimizeMeshes flags. 
+		 * #public static final int aiProcess_PretransformVertices and #public static final int aiProcess_OptimizeMeshes flags. 
 		 * Both join small meshes with equal characteristics, but they can't do 
 		 * their work if two meshes have different materials. Because several
 		 * material settings are lost during Assimp's import filters,
@@ -235,7 +235,7 @@ public class aiPostProcessSteps {
 		 * specify this flag. Alternatively take a look at the
 		 * <tt>#AI_CONFIG_PP_RRM_EXCLUDE_LIST</tt> importer property.
 		 */ 
-		aiProcess_RemoveRedundantMaterials = 0x1000,
+		public static final int aiProcess_RemoveRedundantMaterials = 0x1000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step tries to determine which meshes have normal vectors 
@@ -249,7 +249,7 @@ public class aiPostProcessSteps {
 		 * The step inverts all in-facing normals. Generally it is recommended
 		 * to enable this step, although the result is not always correct.
 		*/
-		aiProcess_FixInfacingNormals = 0x2000,
+		public static final int aiProcess_FixInfacingNormals = 0x2000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step splits meshes with more than one primitive type in 
@@ -263,7 +263,7 @@ public class aiPostProcessSteps {
 		 *  specify which primitive types you need. This can be used to easily
 		 *  exclude lines and points, which are rarely used, from the import.
 		*/
-		aiProcess_SortByPType = 0x8000,
+		public static final int aiProcess_SortByPType = 0x8000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step searches all meshes for degenerate primitives and
@@ -275,7 +275,7 @@ public class aiPostProcessSteps {
 		 * <br><b>1.</b> (if you support lines and points for rendering but don't
 		 *    want the degenerates)</br>
 		 * <ul>
-		 *   <li>Specify the #aiProcess_FindDegenerates flag.
+		 *   <li>Specify the #public static final int aiProcess_FindDegenerates flag.
 		 *   </li>
 		 *   <li>Set the <tt>#AI_CONFIG_PP_FD_REMOVE</tt> importer property to
 		 *       1. This will cause the step to remove degenerate triangles from the
@@ -285,9 +285,9 @@ public class aiPostProcessSteps {
 		 * </ul>
 		 * <br><b>2.</b>(if you don't support lines and points at all)</br>
 		 * <ul>
-		 *   <li>Specify the #aiProcess_FindDegenerates flag.
+		 *   <li>Specify the #public static final int aiProcess_FindDegenerates flag.
 		 *   </li>
-		 *   <li>Specify the #aiProcess_SortByPType flag. This moves line and
+		 *   <li>Specify the #public static final int aiProcess_SortByPType flag. This moves line and
 		 *     point primitives to separate meshes.
 		 *   </li>
 		 *   <li>Set the <tt>#AI_CONFIG_PP_SBP_REMOVE</tt> importer property to 
@@ -301,7 +301,7 @@ public class aiPostProcessSteps {
 		 * don't support lines or points, and some exporters bypass the
 		 * format specification and write them as degenerate triangles instead.
 		*/
-		aiProcess_FindDegenerates = 0x10000,
+		public static final int aiProcess_FindDegenerates = 0x10000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step searches all meshes for invalid data, such as zeroed
@@ -310,13 +310,13 @@ public class aiPostProcessSteps {
 		 *
 		 * This is especially useful for normals. If they are invalid, and
 		 * the step recognizes this, they will be removed and can later
-		 * be recomputed, i.e. by the #aiProcess_GenSmoothNormals flag.<br>
+		 * be recomputed, i.e. by the #public static final int aiProcess_GenSmoothNormals flag.<br>
 		 * The step will also remove meshes that are infinitely small and reduce
 		 * animation tracks consisting of hundreds if redundant keys to a single
 		 * key. The <tt>AI_CONFIG_PP_FID_ANIM_ACCURACY</tt> config property decides
 		 * the accuracy of the check for duplicate animation tracks.
 		*/
-		aiProcess_FindInvalidData = 0x20000,
+		public static final int aiProcess_FindInvalidData = 0x20000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step converts non-UV mappings (such as spherical or
@@ -333,7 +333,7 @@ public class aiPostProcessSteps {
 		 * <tt>#AI_MATKEY_MAPPING</tt> material property in order to display all assets
 		 * properly.
 		 */
-		aiProcess_GenUVCoords = 0x40000,
+		public static final int aiProcess_GenUVCoords = 0x40000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step applies per-texture UV transformations and bakes
@@ -350,7 +350,7 @@ public class aiPostProcessSteps {
 		 * transforming texture coordinates at vertex shader stage with a 3x3
 		 * (homogenous) transformation matrix.
 		*/
-		aiProcess_TransformUVCoords = 0x80000,
+		public static final int aiProcess_TransformUVCoords = 0x80000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step searches for duplicate meshes and replaces them
@@ -365,7 +365,7 @@ public class aiPostProcessSteps {
 		 *  different materials are currently *not* joined, although this is 
 		 *  planned for future versions.
 		 */
-		aiProcess_FindInstances = 0x100000,
+		public static final int aiProcess_FindInstances = 0x100000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>A postprocessing step to reduce the number of meshes.
@@ -373,10 +373,10 @@ public class aiPostProcessSteps {
 		 *  This will, in fact, reduce the number of draw calls.
 		 *
 		 *  This is a very effective optimization and is recommended to be used
-		 *  together with #aiProcess_OptimizeGraph, if possible. The flag is fully
-		 *  compatible with both #aiProcess_SplitLargeMeshes and #aiProcess_SortByPType.
+		 *  together with #public static final int aiProcess_OptimizeGraph, if possible. The flag is fully
+		 *  compatible with both #public static final int aiProcess_SplitLargeMeshes and #public static final int aiProcess_SortByPType.
 		*/
-		aiProcess_OptimizeMeshes  = 0x200000, 
+		public static final int aiProcess_OptimizeMeshes  = 0x200000; 
 
 
 		// -------------------------------------------------------------------------
@@ -397,15 +397,15 @@ public class aiPostProcessSteps {
 		 *  optimization if you just want to get the model data, convert it to your
 		 *  own format, and render it as fast as possible. 
 		 *
-		 *  This flag is designed to be used with #aiProcess_OptimizeMeshes for best
+		 *  This flag is designed to be used with #public static final int aiProcess_OptimizeMeshes for best
 		 *  results.
 		 *
 		 *  @note 'Crappy' scenes with thousands of extremely small meshes packed
 		 *  in deeply nested nodes exist for almost all file formats.
-		 *  #aiProcess_OptimizeMeshes in combination with #aiProcess_OptimizeGraph 
+		 *  #public static final int aiProcess_OptimizeMeshes in combination with #public static final int aiProcess_OptimizeGraph 
 		 *  usually fixes them all and makes them renderable. 
 		*/
-		aiProcess_OptimizeGraph  = 0x400000, 
+		public static final int aiProcess_OptimizeGraph  = 0x400000; 
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step flips all UV coordinates along the y-axis and adjusts
@@ -421,11 +421,11 @@ public class aiPostProcessSteps {
 		 * @endcode
 		 *
 		 * You'll probably want to consider this flag if you use Direct3D for
-		 * rendering. The #aiProcess_ConvertToLeftHanded flag supersedes this
+		 * rendering. The #public static final int aiProcess_ConvertToLeftHanded flag supersedes this
 		 * setting and bundles all conversions typically required for D3D-based
 		 * applications.
 		*/
-		aiProcess_FlipUVs = 0x800000, 
+		public static final int aiProcess_FlipUVs = 0x800000; 
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step adjusts the output face winding order to be CW.
@@ -440,13 +440,13 @@ public class aiPostProcessSteps {
 		 *  x1
 		 * @endcode
 		*/
-		aiProcess_FlipWindingOrder  = 0x1000000,
+		public static final int aiProcess_FlipWindingOrder  = 0x1000000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step splits meshes with many bones into sub-meshes so that each
 		 * su-bmesh has fewer or as many bones as a given limit. 
 	    */
-		aiProcess_SplitByBoneCount  = 0x2000000,
+		public static final int aiProcess_SplitByBoneCount  = 0x2000000;
 
 		// -------------------------------------------------------------------------
 		/** <hr>This step removes bones losslessly or according to some threshold.
@@ -461,9 +461,9 @@ public class aiPostProcessSteps {
 		 *  Use <tt>#AI_CONFIG_PP_DB_ALL_OR_NONE</tt> if you want bones removed if and 
 		 *	only if all bones within the scene qualify for removal.
 	    */
-		aiProcess_Debone  = 0x4000000;
+		public static final int aiProcess_Debone  = 0x4000000;
 
-		// aiProcess_GenEntityMeshes = 0x100000,
-		// aiProcess_OptimizeAnimations = 0x200000
-		// aiProcess_FixTexturePaths = 0x200000
+		// public static final int aiProcess_GenEntityMeshes = 0x100000;
+		// public static final int aiProcess_OptimizeAnimations = 0x200000
+		// public static final int aiProcess_FixTexturePaths = 0x200000
 }

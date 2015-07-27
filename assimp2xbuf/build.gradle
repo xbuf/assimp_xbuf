@@ -1,0 +1,17 @@
+apply plugin: 'java'
+apply plugin: "org.xtend.xtend"
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+def description = "A convert to xbuf that use assimp to read asset files"
+
+//sourceSets.main.resources.srcDir 'src/main/java'
+
+dependencies {
+	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.7.+'
+	compile project(':assimp4java')
+	compile 'org.xbuf:xbuf:0+'
+	testCompile 'junit:junit:4.12'
+}
