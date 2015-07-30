@@ -16,29 +16,13 @@ public class Assimp {
 	@Namespace("Assimp") // Namespace where all c++ code must reside
 	public static class Importer extends Pointer {
 		static { Loader.load(); }
-	    public Importer() {
-	        allocate();
-	    }
-
+	    public Importer() { allocate(); }
 	    public native void allocate();
 		public native @Const aiScene ReadFile(String pFile, int pFlags);
-		// public native void Startup(int maxConnections, SocketDescriptor socketDescriptors, int socketDescriptorCount, int   threadPriority);
-		// public native void SetMaximumIncomingConnections(int maxConnections);
-		// public native Packet Receive();
-		// public native int Send(BitStream bitStream, @Cast("PacketPriority") int priority, @Cast("PacketReliability") int reliability, char orderingChannel, @ByVal AddressOrGUID systemIdentifier, boolean broadcast, int forceReceiptNumber);
-		// public final  int Send(byte k, byte[] b, PacketPriority.E priority, PacketReliability.E reliability, char orderingChannel, AddressOrGUID systemIdentifier, boolean broadcast, int forceReceiptNumber) {
-		//   BitStream bsOut = new BitStream();
-		//   bsOut.Write(k);
-		//   bsOut.WriteAlignedBytes(new BytePointer(b), b.length);
-		//   return Send(bsOut, priority.ordinal(),reliability.ordinal(), orderingChannel, systemIdentifier, broadcast, forceReceiptNumber);
-		// }
-		// public native void DeallocatePacket(Packet v);
-		// public native /*@ByVal @Cast("ConnectionAttemptResult")*/int Connect(String host, int remotePort, String passwordData, int passwordDataLength); //, PublicKey publicKey, int connectionSocketIndex, int sendConnectionAttemptCount/*=12*/, int timeBetweenSendConnectionAttemptsMS/*=500*/, RakNet::TimeMS timeoutTime=0 );
 	}
 	
 	public static class aiScene extends Pointer{
-	    static { Loader.load(); }
-
+		static { Loader.load(); }
 	    public native boolean HasAnimations();
 	    public native boolean HasCameras();
 	    public native boolean HasLights();
@@ -51,6 +35,7 @@ public class Assimp {
 	}
 	
 	public static class aiNode extends Pointer {
+		static { Loader.load(); }
 		public native aiNode FindNode(String name);
 		@MemberGetter public native @Cast("aiNode**") PointerPointer<aiNode> mChildren();
 		@MemberGetter public native @Cast("unsigned int*") int[] mMeshes();
@@ -63,10 +48,12 @@ public class Assimp {
 	}
 	
 	public static class aiString extends Pointer{
+		static { Loader.load(); }
 		public native String C_Str();
 		@Override public String toString(){ return C_Str(); }
 	}
 	public static class aiMatrix4x4 extends Pointer {
+		static { Loader.load(); }
 		@MemberGetter public native @ByVal float a1();
 		@MemberGetter public native @ByVal float a2();
 		@MemberGetter public native @ByVal float a3();
@@ -83,20 +70,32 @@ public class Assimp {
 		@MemberGetter public native @ByVal float d2();
 		@MemberGetter public native @ByVal float d3();
 		@MemberGetter public native @ByVal float d4();
-		//public native void Decompose(aiVector3 scaling, aiQuaternion rotation, aiVector3 position); 
+		public native void Decompose(@ByRef aiVector3D scaling, @ByRef aiQuaternion rotation, @ByRef aiVector3D position); 
 	}
 	
 	public static class aiVector3D extends Pointer {
-		@MemberGetter public native @ByVal float x();
+		static { Loader.load(); }
+	    public aiVector3D() { allocate(); }
+	    public native void allocate();
+
+	    @MemberGetter public native @ByVal float x();
 		@MemberGetter public native @ByVal float y();
 		@MemberGetter public native @ByVal float z();
 	}
-//	
-//	public static class aiQuaternion extends Pointer{
-//		
-//	}
+	
+	public static class aiQuaternion extends Pointer{
+		static { Loader.load(); }
+	    public aiQuaternion() { allocate(); }
+	    public native void allocate();
+
+	    @MemberGetter public native @ByVal float w();
+		@MemberGetter public native @ByVal float x();
+		@MemberGetter public native @ByVal float y();
+		@MemberGetter public native @ByVal float z();		
+	}
 	
 	public static class aiColor4D extends Pointer {
+		static { Loader.load(); }
 		@MemberGetter public native @ByVal float a();
 		@MemberGetter public native @ByVal float b();
 		@MemberGetter public native @ByVal float g();
@@ -104,6 +103,7 @@ public class Assimp {
 	}
 	
 	public static class aiMesh extends Pointer {
+		static { Loader.load(); }
 		public native @Cast("unsigned int") int GetNumColorChannels();	
 		public native @Cast("unsigned int") int GetNumUVChannels();
 		public native boolean HasBones();
@@ -131,11 +131,13 @@ public class Assimp {
 	}
 	
 	public static class aiFace extends Pointer {
-		@MemberGetter public native @Cast("unsigned int *")int[] mIndices();
+		static { Loader.load(); }
+		@MemberGetter public native @Cast("unsigned int*") IntPointer mIndices();
 	 	@MemberGetter public native @Cast("unsigned int") int mNumIndices();
 	}
 
 	public static class aiBone extends Pointer {
+		static { Loader.load(); }
 		@MemberGetter public native @ByVal aiString mName();
 		@MemberGetter public native @Cast("unsigned int") int mNumWeights();
 		@MemberGetter public native @ByVal aiMatrix4x4 mOffsetMatrix();
@@ -143,40 +145,10 @@ public class Assimp {
 	}
 
 	public static class aiVertexWeight extends Pointer {
+		static { Loader.load(); }
 		@MemberGetter public native @Cast("unsigned int")int mVertexId();
 		@MemberGetter public native float mWeight();
 	}
-	/*
-	public static class aiMatrix4x4t<T> extends Pointer {
-		@MemberGetter public native @ByVal T a1();
-		@MemberGetter public native @ByVal T a2();
-		@MemberGetter public native @ByVal T a3();
-		@MemberGetter public native @ByVal T a4();
-		@MemberGetter public native @ByVal T b1();
-		@MemberGetter public native @ByVal T b2();
-		@MemberGetter public native @ByVal T b3();
-		@MemberGetter public native @ByVal T b4();
-		@MemberGetter public native @ByVal T c1();
-		@MemberGetter public native @ByVal T c2();
-		@MemberGetter public native @ByVal T c3();
-		@MemberGetter public native @ByVal T c4();
-		@MemberGetter public native @ByVal T d1();
-		@MemberGetter public native @ByVal T d2();
-		@MemberGetter public native @ByVal T d3();
-		@MemberGetter public native @ByVal T d4();
-		
-		public native void Decompose(aiVector3t<T> scaling, aiQuaterniont<T> rotation, aiVector3t<T> position); 
-		
-	}
-
-	public static class aiVector3t<T> extends Pointer {
-		
-	}
-	
-	public static class aiQuaterniont<T> extends Pointer{
-		
-	}
-*/
 }
 
 

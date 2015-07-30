@@ -1,5 +1,7 @@
 apply plugin: 'java'
-apply plugin: "org.xtend.xtend"
+apply plugin: 'org.xtend.xtend'
+apply plugin: 'application'
+
 
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
@@ -15,3 +17,6 @@ dependencies {
 	compile 'org.xbuf:xbuf:0+'
 	testCompile 'junit:junit:4.12'
 }
+
+mainClassName = 'assimp2xbuf.Main'
+applicationDefaultJvmArgs = []
