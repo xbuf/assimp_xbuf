@@ -13,6 +13,12 @@ import org.bytedeco.javacpp.annotation.*;
 public class Assimp {
 	static { Loader.load(); }
 
+	public static final int AI_MAX_NUMBER_OF_TEXTURECOORDS = 0x8;
+	public static final int AI_MAX_NUMBER_OF_COLOR_SETS = 0x8;
+	public static final int AI_SUCCESS = 0x0;
+	public static final int AI_FAILURE = -0x1;
+	public static final int AI_OUTOFMEMORY = -0x3;
+	
 	@Namespace("Assimp") // Namespace where all c++ code must reside
 	public static class Importer extends Pointer {
 		static { Loader.load(); }
@@ -31,6 +37,8 @@ public class Assimp {
 	    public native boolean HasTextures();
 		@MemberGetter public native @Cast("aiMesh**") PointerPointer<aiMesh> mMeshes();
 		@MemberGetter public native int mNumMeshes();
+		@MemberGetter public native @Cast("aiMaterial**") PointerPointer<aiMaterial> mMaterials();
+		@MemberGetter public native int mNumMaterials();
 	    @MemberGetter public native aiNode mRootNode();
 	}
 	
@@ -49,6 +57,9 @@ public class Assimp {
 	
 	public static class aiString extends Pointer{
 		static { Loader.load(); }
+	    public aiString() { allocate(); }
+	    public native void allocate();
+	    
 		public native String C_Str();
 		@Override public String toString(){ return C_Str(); }
 	}
@@ -94,8 +105,19 @@ public class Assimp {
 		@MemberGetter public native @ByVal float z();		
 	}
 	
+	public static class aiColor3D extends Pointer {
+		static { Loader.load(); }
+	    public aiColor3D() { allocate(); }
+	    public native void allocate();
+		@MemberGetter public native @ByVal float b();
+		@MemberGetter public native @ByVal float g();
+		@MemberGetter public native @ByVal float r();
+	}
+	
 	public static class aiColor4D extends Pointer {
 		static { Loader.load(); }
+	    public aiColor4D() { allocate(); }
+	    public native void allocate();
 		@MemberGetter public native @ByVal float a();
 		@MemberGetter public native @ByVal float b();
 		@MemberGetter public native @ByVal float g();
@@ -113,21 +135,21 @@ public class Assimp {
 		public native boolean HasTangentsAndBitangents();
 		public native boolean HasTextureCoords(@Cast("unsigned int") int pIndex);
 		public native boolean HasVertexColors(@Cast("unsigned int") int pIndex);
-		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mBitangents();
+		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mBitangents();
 		@MemberGetter public native @Cast("aiBone**") PointerPointer<aiBone> mBones();
 		@MemberGetter public native @Cast("aiColor4D**") PointerPointer<aiColor4D> mColors();// [AI_MAX_NUMBER_OF_COLOR_SETS]
-		@MemberGetter public native @Cast("aiFace*") PointerPointer<aiFace>mFaces();
+		@MemberGetter public native @Cast("aiFace*") aiFace mFaces();
 		@MemberGetter public native @Cast("unsigned int") int mMaterialIndex();
 		@MemberGetter public native @ByVal aiString mName();
-		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mNormals();
+		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mNormals();
 		@MemberGetter public native @Cast("unsigned int") int mNumBones();
 		@MemberGetter public native @Cast("unsigned int") int mNumFaces();
 		@MemberGetter public native @Cast("unsigned int*") int[] mNumUVComponents();// [AI_MAX_NUMBER_OF_TEXTURECOORDS]
 		@MemberGetter public native @Cast("unsigned int") int mNumVertices();
 		@MemberGetter public native @Cast("unsigned int") int mPrimitiveTypes();
-		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mTangents();
+		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mTangents();
 		@MemberGetter public native @Cast("aiVector3D**") PointerPointer<aiVector3D> mTextureCoords(); //[AI_MAX_NUMBER_OF_TEXTURECOORDS]
-		@MemberGetter public native @Cast("aiVector3D*") PointerPointer<aiVector3D> mVertices();
+		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mVertices();
 	}
 	
 	public static class aiFace extends Pointer {
@@ -148,6 +170,49 @@ public class Assimp {
 		static { Loader.load(); }
 		@MemberGetter public native @Cast("unsigned int")int mVertexId();
 		@MemberGetter public native float mWeight();
+	}
+
+	public static class aiMaterial extends Pointer {
+		static { Loader.load(); }
+		// aiReturn Get(const char* pKey,unsigned int type, unsigned int idx, int& pOut) const;
+		public static final String AI_MATKEY_NAME = "?mat.name"; //,0,0
+		public static final String AI_MATKEY_TWOSIDED = "$mat.twosided"; //,0,0
+		public static final String AI_MATKEY_SHADING_MODEL ="$mat.shadingm"; //,0,0
+		public static final String AI_MATKEY_ENABLE_WIREFRAME ="$mat.wireframe"; //,0,0
+		public static final String AI_MATKEY_BLEND_FUNC ="$mat.blend"; //,0,0
+		public static final String AI_MATKEY_OPACITY ="$mat.opacity"; //,0,0
+		public static final String AI_MATKEY_BUMPSCALING ="$mat.bumpscaling"; //,0,0
+		public static final String AI_MATKEY_SHININESS ="$mat.shininess"; //,0,0
+		public static final String AI_MATKEY_REFLECTIVITY ="$mat.reflectivity"; //,0,0
+		public static final String AI_MATKEY_SHININESS_STRENGTH ="$mat.shinpercent"; //,0,0
+		public static final String AI_MATKEY_REFRACTI ="$mat.refracti"; //,0,0
+		public static final String AI_MATKEY_COLOR_DIFFUSE ="$clr.diffuse"; //,0,0
+		public static final String AI_MATKEY_COLOR_AMBIENT ="$clr.ambient"; //,0,0
+		public static final String AI_MATKEY_COLOR_SPECULAR ="$clr.specular"; //,0,0
+		public static final String AI_MATKEY_COLOR_EMISSIVE ="$clr.emissive"; //,0,0
+		public static final String AI_MATKEY_COLOR_TRANSPARENT ="$clr.transparent"; //,0,0
+		public static final String AI_MATKEY_COLOR_REFLECTIVE ="$clr.reflective"; //,0,0
+		public static final String AI_MATKEY_GLOBAL_BACKGROUND_IMAGE ="?bg.global"; //,0,0
+
+		public native int Get(String pKey, int type, int idx, IntPointer pOut);
+		public native int Get(String pKey, int type, int idx, FloatPointer pOut);
+		public native int Get(String pKey, int type, int idx, @ByRef aiString pOut);
+		public native int Get(String pKey, int type, int idx, @ByRef aiColor3D pOut);
+		public native int Get(String pKey, int type, int idx, @ByRef aiColor4D pOut);
+
+		/**
+		 * @param type aiTextureType
+		 * @return
+		 */
+		public native int GetTextureCount(@Cast("aiTextureType")int type);
+		public native int GetTexture(@Cast("aiTextureType")int	type,
+				int index,
+				aiString path,
+				@Cast("aiTextureMapping*") Pointer mapping,
+				@Cast("unsigned int*") Pointer uvindex,
+				@Cast("float *") Pointer blend,
+				@Cast("aiTextureOp *") Pointer op,
+				@Cast("aiTextureMapMode *") Pointer mapmode); 	
 	}
 }
 
