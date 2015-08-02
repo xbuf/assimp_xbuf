@@ -12,7 +12,7 @@ def description = "A convert to xbuf that use assimp to read asset files"
 //sourceSets.main.resources.srcDir 'src/main/java'
 
 dependencies {
-	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.7.+'
+	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.8.+'
 	compile project(':assimp4java')
 	compile 'org.xbuf:xbuf:0+'
 	testCompile 'junit:junit:4.12'
