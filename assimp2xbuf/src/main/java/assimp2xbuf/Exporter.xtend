@@ -18,7 +18,6 @@ import xbuf.Datas.Vec3
 import xbuf.Datas.Quaternion
 import xbuf.Datas.Relation
 import java.util.UUID
-import xbuf.Datas.Geometry
 import xbuf.Datas.Mesh
 import xbuf.Datas.VertexArray
 import xbuf.Datas.IndexArray
@@ -31,8 +30,8 @@ import org.bytedeco.javacpp.FloatPointer
 import xbuf.Datas.Texture
 import static assimp.aiTextureType.*
 import java.util.Optional
-import java.nio.file.FileSystems
 import java.nio.file.Files
+import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
@@ -43,30 +42,30 @@ import java.nio.file.StandardCopyOption
 //TODO Xbuf assign Material to Mesh
 //TODO inverse the roughnessMap (from shininessMap)
 class Exporter {
-    
+
     static class ResultsTmp {
         val out = Data.newBuilder()
         val meshes = new HashMap<Integer, Mesh.Builder>()
         val materials = new HashMap<Integer, Material.Builder>()
     }
-    
-    public var inputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
-    public var outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
-    
+
+    public var textureInPathTransform = [ AssetPath v | v ]
+    public var textureOutPathTransform = [ AssetPath v | v ]
+
     def String newId() {
         UUID.randomUUID.toString
     }
-    
+
     def String findMeshId(int i) { "_mesh_" + i}
     def String findMaterialId(int i) { "_material_" + i}
-    
+
     def export(aiScene scene) {
         export(new ResultsTmp(), scene).out
     }
-    
+
 	def export(ResultsTmp resTmp, aiScene scene) {
-        exportMaterials(resTmp, scene)
-        exportMeshes(resTmp, scene)
+      exportMaterials(resTmp, scene)
+      exportMeshes(resTmp, scene)
 	    exportNodes(resTmp, scene, scene.mRootNode())
 	    resTmp
 	}
@@ -75,14 +74,17 @@ class Exporter {
         val obj = toTObject(node)
         resTmp.out.addTobjects(obj)
         if (node.mNumMeshes > 0) {
-            val geo = exportGeometry(resTmp, scene, node)    
-            resTmp.out.addRelations(newRelation(geo.id, obj.id, null))
-            println("export geometry: " + geo.id + " .. " + geo.name )
-            geo.meshesList.forEach[m|
-            	println("-- export mesh: " + m.name)
-            	m.vertexArraysList.forEach[va|
-            		println("---- export vertexarray: " + va.attrib.name)
-            	]
+            node.mMeshes.forEach[i|
+                val m = resTmp.meshes.get(i)
+                if (m == null) {
+                    println("mesh ${i} not found")
+                } else {
+                    println("-- export mesh: " + m.name)
+                  	m.vertexArraysList.forEach[va|
+                  		println("---- export vertexarray: " + va.attrib.name)
+                  	]
+                    resTmp.out.addRelations(newRelation(m.id, obj.id, null))
+                }
             ]
         }
         val nbChildren = node.mNumChildren
@@ -92,30 +94,14 @@ class Exporter {
         }
         obj.id
     }
- 
-    def exportGeometry(ResultsTmp resTmp, aiScene scene, aiNode node) {
-        val geo = Geometry.newBuilder()
-        geo.id = newId()
-        geo.name = "__geo_" + node.mName.toString()
-        node.mMeshes.forEach[i|
-            val m = resTmp.meshes.get(i)
-            if (m == null) {
-                println("mesh ${i} not found")
-            } else {
-                geo.addMeshes(m)     
-            }
-        ]
-        resTmp.out.addGeometries(geo)
-        geo
-    }
-    
+
     def exportMeshes(ResultsTmp resTmp, aiScene scene) {
         for(var i =  scene.mNumMeshes - 1; i >= 0; i--){
             val m = scene.mMeshes.get(aiMesh, i)
             val mdest = Mesh.newBuilder()
             mdest.name = m.mName.toString
             mdest.id = findMeshId(i)
-            val nbVertices = m.mNumVertices()           
+            val nbVertices = m.mNumVertices()
             addVertexArrayV3(mdest, VertexArray.Attrib.position, m.mVertices, nbVertices)
             addVertexArrayV3(mdest, VertexArray.Attrib.normal, m.mNormals, nbVertices)
             addVertexArrayV3(mdest, VertexArray.Attrib.tangent, m.mTangents, nbVertices)
@@ -158,7 +144,7 @@ class Exporter {
             resTmp.out.addRelations(newRelation(findMaterialId(m.mMaterialIndex), mdest.id, null))
         }
     }
-    
+
     def VertexArray.Builder addVertexArrayV3(Mesh.Builder mdest, VertexArray.Attrib attrib, aiVector3D list, int length) {
         val lg = if (length == -1) list.limit else length
         if (lg > 0 && list != null) {
@@ -175,7 +161,7 @@ class Exporter {
             va
         } else null
     }
-    
+
     def VertexArray.Builder addVertexArrayColor(Mesh.Builder mdest, VertexArray.Attrib attrib, aiColor4D list, int length) {
         val lg = if (length == -1) list.limit else length
         if (lg > 0) {
@@ -209,7 +195,7 @@ class Exporter {
         out.transform = toTransform(in.mTransformation)
         out
     }
-    
+
     def Transform.Builder toTransform(aiMatrix4x4 in) {
         val out = Transform.newBuilder()
         val t = new aiVector3D()
@@ -221,7 +207,7 @@ class Exporter {
         out.scale = toVec3(s)
         out
     }
-    
+
     def Vec3.Builder toVec3(aiVector3D in) {
         val out = Vec3.newBuilder()
         out.x = in.x
@@ -238,7 +224,7 @@ class Exporter {
         out.z = in.z
         out
     }
-    
+
     def exportMaterials(ResultsTmp resTmp, aiScene scene) {
     	for(var i =  scene.mNumMaterials - 1; i >= 0; i--){
             val m = scene.mMaterials.get(aiMaterial, i)
@@ -250,23 +236,23 @@ class Exporter {
             }
             println("export material:" + mdest.id + " .. " + mdest.name)
             readColor3D(m, aiMaterial.AI_MATKEY_COLOR_DIFFUSE).map[v| mdest.color = v]
-            readTexture(m, aiTextureType_DIFFUSE).map[v| mdest.colorMap = v] 
+            readTexture(m, aiTextureType_DIFFUSE).map[v| mdest.colorMap = v]
             readColor3D(m, aiMaterial.AI_MATKEY_COLOR_EMISSIVE).map[v| mdest.emission = v]
-            readTexture(m, aiTextureType_EMISSIVE).map[v| mdest.emissionMap = v] 
+            readTexture(m, aiTextureType_EMISSIVE).map[v| mdest.emissionMap = v]
             readColor3D(m, aiMaterial.AI_MATKEY_COLOR_SPECULAR).map[v| mdest.specular = v]
-            readTexture(m, aiTextureType_SPECULAR).map[v| mdest.specularMap = v] 
-            readFloat(m, aiMaterial.AI_MATKEY_OPACITY, 1.0f).map[v| mdest.opacity = v] 
+            readTexture(m, aiTextureType_SPECULAR).map[v| mdest.specularMap = v]
+            readFloat(m, aiMaterial.AI_MATKEY_OPACITY, 1.0f).map[v| mdest.opacity = v]
             readTexture(m, aiTextureType_OPACITY).map[v| mdest.opacityMap = v]
-            readFloat(m, aiMaterial.AI_MATKEY_SHININESS_STRENGTH, 1.0f).map[v| mdest.specularPower = v] 
+            readFloat(m, aiMaterial.AI_MATKEY_SHININESS_STRENGTH, 1.0f).map[v| mdest.specularPower = v]
             readFloat(m, aiMaterial.AI_MATKEY_SHININESS, 0.0f).map[v| mdest.roughness = 1.0f - v]
             //mdest.roughnessMap = readTexture(m, aiTextureType_SHININESS).map[v|  = v]
-            //mdest.metalness = readFloat(m, aiMaterial.AI_MATKEY_REFRACTI, 1.0f).map[v| = v] 
+            //mdest.metalness = readFloat(m, aiMaterial.AI_MATKEY_REFRACTI, 1.0f).map[v| = v]
             readTexture(m, aiTextureType_NORMALS).map[v| mdest.normalMap = v]
             resTmp.materials.put(i, mdest)
             resTmp.out.addMaterials(mdest)
     	}
     }
-    
+
     val c3tmp = new aiColor3D()
     def Optional<Color.Builder> readColor3D(aiMaterial src, String key) {
         if (src.Get(key, 0, 0, c3tmp) == Assimp.AI_SUCCESS) {
@@ -276,10 +262,10 @@ class Exporter {
 			cdest.g = c3tmp.g
 			cdest.b = c3tmp.b
   			println("add color : " + cdest)
-			Optional.of(cdest) 
+			Optional.of(cdest)
         } else Optional.empty
     }
-    
+
     val floattmp = new FloatPointer()
     def Optional<Float> readFloat(aiMaterial src, String key, float defaultValue) {
         if (src.Get(key, 0, 0, floattmp) == Assimp.AI_SUCCESS) {
@@ -288,30 +274,35 @@ class Exporter {
     }
 
     val stringtmp = new aiString()
-    def Optional<Texture.Builder> readTexture(aiMaterial src, int type) {
-    	if (src.GetTextureCount(type) > 0) {
-    		if (src.GetTextureCount(type) > 1) {
-    			println("warning more than one texture, only Keep the first");
-    		}
-    		if (src.GetTexture(type, 0, stringtmp, null, null, null, null, null) == Assimp.AI_SUCCESS) {
-    			val tex = Texture.newBuilder()
-    			tex.id = newId()
-    			val path = inputDir.resolve(FileSystems.getDefault().getPath(stringtmp.toString().replace('\\', '/').replace("_d.tga", ".tga").replace("_local.tga", "_h.tga")))
-    			if (Files.isReadable(path)) {
-    				val rpath = "Textures/" + path.fileName
-    				val dest = outputDir.resolve(rpath)
-    				Files.createDirectories(dest.parent)
-    				Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING)
-	    			tex.name = path.fileName.toString
-	    			tex.rpath = rpath
-	    			println("add texture : " + tex.rpath)
-	    			Optional.of(tex)
-    			} else {
-	    			println("texture not found : " + path)
-    				Optional.empty
-   				}
-			} else Optional.empty
-        } else Optional.empty
-    }
-    
+
+	def Optional<Texture.Builder> readTexture(aiMaterial src, int type) {
+		if (src.GetTextureCount(type) > 0) {
+			if (src.GetTextureCount(type) > 1) {
+				println("warning more than one texture, only Keep the first");
+			}
+			if (src.GetTexture(type, 0, stringtmp, null, null, null, null, null) == Assimp.AI_SUCCESS) {
+				val tex = Texture.newBuilder()
+				tex.id = newId()
+				val inr = stringtmp.toString().replace('\\', '/')
+				val in = textureInPathTransform.apply(new AssetPath(inr, FileSystems.getDefault().getPath(inr)))
+				if (Files.isReadable(in.path)) {
+					val out = textureOutPathTransform.apply(in)
+					if (in.path != out.path) {
+						Files.createDirectories(out.path.parent)
+						Files.copy(in.path, out.path, StandardCopyOption.REPLACE_EXISTING)
+					}
+					tex.name = out.path.fileName.toString
+					tex.rpath = out.rpath
+					println("add texture : " + tex.rpath)
+					Optional.of(tex)
+				} else {
+					println("texture not found : " + in.path)
+					Optional.empty
+				}
+			} else
+				Optional.empty
+		} else
+			Optional.empty
+	}
+
 }
