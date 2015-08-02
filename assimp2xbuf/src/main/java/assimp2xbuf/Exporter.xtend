@@ -28,11 +28,13 @@ import xbuf.Datas.Material
 import xbuf.Datas.Color
 import org.bytedeco.javacpp.FloatPointer
 import xbuf.Datas.Texture
-import static assimp.aiTextureType.*
 import java.util.Optional
 import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.StandardCopyOption
+import org.bytedeco.javacpp.IntPointer
+import static assimp.aiTextureType.*
+import static assimp.aiShadingMode.*
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -141,6 +143,7 @@ class Exporter {
             //TODO add checker about size, ...
             mdest.primitive = Primitive.triangles
             resTmp.meshes.put(i, mdest)
+            resTmp.out.addMeshes(mdest)
             resTmp.out.addRelations(newRelation(findMaterialId(m.mMaterialIndex), mdest.id, null))
         }
     }
@@ -248,6 +251,11 @@ class Exporter {
             //mdest.roughnessMap = readTexture(m, aiTextureType_SHININESS).map[v|  = v]
             //mdest.metalness = readFloat(m, aiMaterial.AI_MATKEY_REFRACTI, 1.0f).map[v| = v]
             readTexture(m, aiTextureType_NORMALS).map[v| mdest.normalMap = v]
+            mdest.shadeless = false
+            readInt(m, aiMaterial.AI_MATKEY_SHADING_MODEL).map[v|
+            	mdest.shadeless = (v == aiShadingMode_Flat || v == aiShadingMode_NoShading)
+            	//TODO set the mdest.familly
+            ]
             resTmp.materials.put(i, mdest)
             resTmp.out.addMaterials(mdest)
     	}
@@ -273,8 +281,14 @@ class Exporter {
         } else Optional.empty // Optional.of(defaultValue)
     }
 
-    val stringtmp = new aiString()
+    val inttmp = new IntPointer()
+    def Optional<Integer> readInt(aiMaterial src, String key) {
+        if (src.Get(key, 0, 0, inttmp) == Assimp.AI_SUCCESS) {
+			Optional.of(inttmp.get)
+        } else Optional.empty // Optional.of(defaultValue)
+    }
 
+    val stringtmp = new aiString()
 	def Optional<Texture.Builder> readTexture(aiMaterial src, int type) {
 		if (src.GetTextureCount(type) > 0) {
 			if (src.GetTextureCount(type) > 1) {
