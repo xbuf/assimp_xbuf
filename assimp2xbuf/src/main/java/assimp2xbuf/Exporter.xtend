@@ -11,6 +11,7 @@ import assimp.Assimp.aiQuaternion
 import assimp.Assimp.aiColor3D
 import assimp.Assimp.aiColor4D
 import assimp.Assimp.aiString
+import assimp.Assimp.aiBone
 import xbuf.Datas.Data
 import xbuf.Datas.TObject
 import xbuf.Datas.Transform
@@ -35,6 +36,11 @@ import java.nio.file.StandardCopyOption
 import org.bytedeco.javacpp.IntPointer
 import static assimp.aiTextureType.*
 import static assimp.aiShadingMode.*
+import java.util.HashSet
+import java.util.Collection
+import java.util.Map
+import xbuf.Datas.Bone
+import xbuf.Datas.Skeleton
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -66,34 +72,44 @@ class Exporter {
     }
 
 	def export(ResultsTmp resTmp, aiScene scene) {
-      exportMaterials(resTmp, scene)
-      exportMeshes(resTmp, scene)
-	    exportNodes(resTmp, scene, scene.mRootNode())
+        exportMaterials(resTmp, scene)
+        exportMeshes(resTmp, scene)
+        val nodeNameSkeletons = exportSkeletons(resTmp, scene)
+	    exportNodes(resTmp, scene, scene.mRootNode(), nodeNameSkeletons)
 	    resTmp
 	}
 
-    def String exportNodes(ResultsTmp resTmp, aiScene scene, aiNode node) {
+    def String exportNodes(ResultsTmp resTmp, aiScene scene, aiNode node, Collection<Pair<String, Skeleton.Builder>> nodeNameSkeletons) {
         val obj = toTObject(node)
-        resTmp.out.addTobjects(obj)
-        if (node.mNumMeshes > 0) {
-            node.mMeshes.forEach[i|
-                val m = resTmp.meshes.get(i)
-                if (m == null) {
-                    println("mesh ${i} not found")
-                } else {
-                    println("-- export mesh: " + m.name)
-                  	m.vertexArraysList.forEach[va|
-                  		println("---- export vertexarray: " + va.attrib.name)
-                  	]
-                    resTmp.out.addRelations(newRelation(m.id, obj.id, null))
-                }
-            ]
+        val nbMeshes = node.mNumMeshes
+        for(var i = 0; i < nbMeshes; i++){
+            val m = resTmp.meshes.get(i)
+            if (m == null) {
+                println("mesh ${i} not found")
+            } else {
+                println("-- export mesh: " + m.name)
+              	m.vertexArraysList.forEach[va|
+              		println("---- export vertexarray: " + va.attrib.name)
+              	]
+                resTmp.out.addRelations(newRelation(m.id, obj.id, null))
+            }
         }
         val nbChildren = node.mNumChildren
         for(var i = 0; i < nbChildren; i++){
-            val childId = exportNodes(resTmp, scene, node.mChildren.get(aiNode, i))
-            resTmp.out.addRelations(newRelation(obj.id, childId, null))
+            val child = node.mChildren.get(aiNode, i)
+            val childName = child.mName.toString
+            val skeletons = nodeNameSkeletons.filter[v| v.key == childName]
+            if (!skeletons.isEmpty) {
+                skeletons.forEach[v|
+                    println("link skeleton :" + v.value.id + ".." + obj.id + "..." + obj.name)
+                    resTmp.out.addRelations(newRelation(v.value.id, obj.id, null))
+                ]
+            } else {
+                val childId = exportNodes(resTmp, scene, child, nodeNameSkeletons)
+                resTmp.out.addRelations(newRelation(obj.id, childId, null))
+            }
         }
+        resTmp.out.addTobjects(obj)
         obj.id
     }
 
@@ -318,5 +334,96 @@ class Exporter {
 		} else
 			Optional.empty
 	}
+    
+    def exportSkeletons(ResultsTmp resTmp, aiScene scene) {
+        val rboneNames = findRBoneNames(scene)
+        extractSkeleton(resTmp, scene.mRootNode, rboneNames)
+    }
+
+    def findRBoneNames(aiScene scene) {
+        val nodes = collectAllNodes(scene.mRootNode, new HashMap<String, aiNode>())
+        val rboneNames = new HashSet<String>()
+        for(var j =  scene.mNumMeshes - 1; j >= 0; j--){
+            val mesh = scene.mMeshes.get(aiMesh, j)
+            for(var i = 0; i < mesh.mNumBones; i++) {
+                val bone = mesh.mBones.get(aiBone, i)
+                val name = bone.mName.toString()
+                if (!rboneNames.contains(name)) {
+                    rboneNames.add(name)
+                    //addChildren(nodes, name, necessityMap)
+                    addParentWithoutMeshes(nodes.get(name), rboneNames)
+                }
+            }
+        }
+        rboneNames
+    }
+    def Map<String, aiNode> collectAllNodes(aiNode node, Map<String, aiNode> collector){
+        collector.put(node.mName.toString, node)
+        val nbChildren = node.mNumChildren
+        for(var i = 0; i < nbChildren; i++){
+            collectAllNodes(node.mChildren.get(aiNode, i), collector)
+        }
+        collector
+    }    
+    
+    def Collection<Pair<String, Skeleton.Builder>> extractSkeleton(ResultsTmp resTmp, aiNode node, Collection<String> rboneNames) {
+        val back = new HashSet<Pair<String, Skeleton.Builder>>()
+        val name = node.mName.toString
+        if (rboneNames.contains(name)) {
+            val skeleton = toSkeleton(node)
+            resTmp.out.addSkeletons(skeleton)
+            back.add(new Pair(name, skeleton))            
+        } else {
+            val nbChildren = node.mNumChildren
+            for(var i = 0; i < nbChildren; i++){
+                back.addAll(extractSkeleton(resTmp, node.mChildren.get(aiNode, i), rboneNames))
+            }
+        }
+        back
+    }
+    
+    def toSkeleton(aiNode node) {
+        val skeleton = Skeleton.newBuilder()
+        skeleton.id = newId()
+        appendBoneToSkeleton(skeleton, node)
+        skeleton
+    }
+    
+    def Bone.Builder appendBoneToSkeleton(Skeleton.Builder skeleton, aiNode node) {
+        val bone = toBone(node)
+        skeleton.addBones(bone)
+        val nbChildren = node.mNumChildren
+        for(var i = 0; i < nbChildren; i++){
+            val child = appendBoneToSkeleton(skeleton, node.mChildren.get(aiNode, i))
+            skeleton.addBonesGraph(newRelation(bone.id, child.id, null))
+        }
+        bone
+    }
+    
+    def Bone.Builder toBone(aiNode in) {
+        val out = Bone.newBuilder()
+        out.id = newId() //TODO find a better id
+        out.name = in.mName.toString()
+        out.transform = toTransform(in.mTransformation)
+        out
+    }
+
+    def void addParentWithoutMeshes(aiNode node, Collection<String> collector) {
+        val parent = node.mParent
+        val name = parent.mName.toString
+        if ((parent.mNumMeshes == 0) && !collector.contains(name) && !hasChildrenWithMeshes(parent)){
+            collector.add(name)
+            addParentWithoutMeshes(parent, collector)
+        }
+    }
+    
+    def hasChildrenWithMeshes(aiNode node) {
+        var res = false
+        val nbChildren = node.mNumChildren
+        for(var i = 0; i < nbChildren; i++){
+            res = res || (node.mChildren.get(aiNode, i).mNumMeshes > 0)
+        }
+        res
+    }
 
 }
