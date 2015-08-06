@@ -42,6 +42,8 @@ import java.util.Map
 import xbuf.Datas.Bone
 import xbuf.Datas.Skeleton
 import org.slf4j.LoggerFactory
+import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import java.util.ArrayList
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -56,9 +58,27 @@ class Exporter {
     static class ResultsTmp {
         val out = Data.newBuilder()
         val meshes = new HashMap<Integer, Mesh.Builder>()
+        val skins = new HashMap<Integer, BonesInfluence[]>()
         val materials = new HashMap<Integer, Material.Builder>()
     }
 
+    @FinalFieldsConstructor
+    static class BoneInfluence {
+        public val String boneName
+        public val float weight
+    }
+    
+    static class BonesInfluence {
+        val list = new ArrayList<BoneInfluence>(6)
+        def add(BoneInfluence v) {
+            list.add(v)
+        }
+        
+        def influences() {
+            list.sortBy[v| -v.weight]
+        }
+    }
+    
     public var textureInPathTransform = [ AssetPath v | v ]
     public var textureOutPathTransform = [ AssetPath v | v ]
 
@@ -75,8 +95,8 @@ class Exporter {
 
 	def export(ResultsTmp resTmp, aiScene scene) {
         exportMaterials(resTmp, scene)
-        exportMeshes(resTmp, scene)
         val nodeNameSkeletons = exportSkeletons(resTmp, scene)
+        exportMeshes(resTmp, scene)
 	    exportNodes(resTmp, scene, scene.mRootNode(), nodeNameSkeletons)
 	    resTmp
 	}
@@ -427,4 +447,16 @@ class Exporter {
         res
     }
 
+    def extractSkin(aiMesh mesh)  {
+         val BonesInfluence[] influences = newArrayOfSize(mesh.mNumVertices)
+         val nbBones = mesh.mNumBones
+         for(var i=0; i < nbBones; i++){
+             val bone = mesh.mBones.get(aiBone, i)
+             val name = bone.mName.toString
+             val nbinfluence = bone.mNumWeights
+             for(var j = 0; i < nbinfluence; j++) {
+                //TODO influences
+             }
+         }
+    }
 }
