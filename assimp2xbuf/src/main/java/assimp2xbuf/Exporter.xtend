@@ -41,6 +41,7 @@ import java.util.Collection
 import java.util.Map
 import xbuf.Datas.Bone
 import xbuf.Datas.Skeleton
+import org.slf4j.LoggerFactory
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -50,7 +51,8 @@ import xbuf.Datas.Skeleton
 //TODO Xbuf assign Material to Mesh
 //TODO inverse the roughnessMap (from shininessMap)
 class Exporter {
-
+    val log = LoggerFactory.getLogger(this.getClass)
+    
     static class ResultsTmp {
         val out = Data.newBuilder()
         val meshes = new HashMap<Integer, Mesh.Builder>()
@@ -85,11 +87,11 @@ class Exporter {
         for(var i = 0; i < nbMeshes; i++){
             val m = resTmp.meshes.get(i)
             if (m == null) {
-                println("mesh ${i} not found")
+                log.warn("mesh {} not found", i)
             } else {
-                println("-- export mesh: " + m.name)
+                log.debug("-- export mesh: " + m.name)
               	m.vertexArraysList.forEach[va|
-              		println("---- export vertexarray: " + va.attrib.name)
+              		log.debug("---- export vertexarray: " + va.attrib.name)
               	]
                 resTmp.out.addRelations(newRelation(m.id, obj.id, null))
             }
@@ -101,7 +103,7 @@ class Exporter {
             val skeletons = nodeNameSkeletons.filter[v| v.key == childName]
             if (!skeletons.isEmpty) {
                 skeletons.forEach[v|
-                    println("link skeleton :" + v.value.id + ".." + obj.id + "..." + obj.name)
+                    log.debug("link skeleton {} to node ({}, {})", v.value.id, obj.id, obj.name)
                     resTmp.out.addRelations(newRelation(v.value.id, obj.id, null))
                 ]
             } else {
@@ -140,7 +142,6 @@ class Exporter {
             }
 //            addVertexArrayColor(mdest, VertexArray.Attrib.color, m.mColors, nbVertices)
             //TODO bones, color,...
-            println("<<< " + nbVertices + " .. " + mdest.name + " .. " + m.mNumFaces)
             val ia = IndexArray.newBuilder()
             ia.intsBuilder.step = 3
             for(var j = 0; j < m.mNumFaces; j++) {
@@ -152,7 +153,7 @@ class Exporter {
                     ia.intsBuilder.addValues(faces.mIndices.get(2))
     //TODO            } else if (nb == 4) {
                 } else {
-                    println("WARNING only support faces triange(3): " + nb)
+                    log.warn("only support faces triangle (3 vertices): {}", nb)
                 }
             }
             mdest.addIndexArrays(ia)
@@ -253,7 +254,7 @@ class Exporter {
             if (m.Get(aiMaterial.AI_MATKEY_NAME, 0, 0, s) == Assimp.AI_SUCCESS) {
 				mdest.name = s.toString()
             }
-            println("export material:" + mdest.id + " .. " + mdest.name)
+            log.debug("export material: ({}, {}) ", mdest.id, mdest.name)
             readColor3D(m, aiMaterial.AI_MATKEY_COLOR_DIFFUSE).map[v| mdest.color = v]
             readTexture(m, aiTextureType_DIFFUSE).map[v| mdest.colorMap = v]
             readColor3D(m, aiMaterial.AI_MATKEY_COLOR_EMISSIVE).map[v| mdest.emission = v]
@@ -285,7 +286,7 @@ class Exporter {
 			cdest.r = c3tmp.r
 			cdest.g = c3tmp.g
 			cdest.b = c3tmp.b
-  			println("add color : " + cdest)
+  			log.debug("add color : {}", cdest)
 			Optional.of(cdest)
         } else Optional.empty
     }
@@ -308,7 +309,7 @@ class Exporter {
 	def Optional<Texture.Builder> readTexture(aiMaterial src, int type) {
 		if (src.GetTextureCount(type) > 0) {
 			if (src.GetTextureCount(type) > 1) {
-				println("warning more than one texture, only Keep the first");
+				log.warn("more than one texture, only Keep the first");
 			}
 			if (src.GetTexture(type, 0, stringtmp, null, null, null, null, null) == Assimp.AI_SUCCESS) {
 				val tex = Texture.newBuilder()
@@ -323,10 +324,10 @@ class Exporter {
 					}
 					tex.name = out.path.fileName.toString
 					tex.rpath = out.rpath
-					println("add texture : " + tex.rpath)
+					log.debug("add texture : {}", tex.rpath)
 					Optional.of(tex)
 				} else {
-					println("texture not found : " + in.path)
+					log.debug("texture not found : {}", in.path)
 					Optional.empty
 				}
 			} else
