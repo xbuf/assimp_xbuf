@@ -19,14 +19,18 @@ import xbuf.Datas.Skeleton
 class Main {
 	def static void main(String[] args) {
 		//val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/assimp/models/Collada/duck.dae"
-    val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
-		val inputDir = FileSystems.getDefault().getPath(inputPath).parent
+        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
+		//val inputDir = FileSystems.getDefault().getPath(inputPath).parent
+
+        val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
+        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.dae"
+        val inputDir = FileSystems.getDefault().getPath(inputPath).parent
 
 		//val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
 		//val inputPath = doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
 		//val inputDir = FileSystems.getDefault().getPath(doom3Root)
 
-    val outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
+        val outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
 		val outputFile = outputDir.resolve(FileSystems.getDefault().getPath(new File(inputPath).name + ".xbuf"))
 
 

@@ -163,7 +163,7 @@ public class Assimp {
 		@MemberGetter public native @ByVal aiString mName();
 		@MemberGetter public native @Cast("unsigned int") int mNumWeights();
 		@MemberGetter public native @ByVal aiMatrix4x4 mOffsetMatrix();
-		@MemberGetter public native @Cast("aiVertexWeight*") PointerPointer<aiVertexWeight> mWeights();
+		@MemberGetter public native @Cast("aiVertexWeight*") aiVertexWeight mWeights();
 	}
 
 	public static class aiVertexWeight extends Pointer {

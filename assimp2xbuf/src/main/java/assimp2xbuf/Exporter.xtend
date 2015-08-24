@@ -12,6 +12,7 @@ import assimp.Assimp.aiColor3D
 import assimp.Assimp.aiColor4D
 import assimp.Assimp.aiString
 import assimp.Assimp.aiBone
+import assimp.Assimp.aiVertexWeight
 import xbuf.Datas.Data
 import xbuf.Datas.TObject
 import xbuf.Datas.Transform
@@ -70,8 +71,8 @@ class Exporter {
     
     static class BonesInfluence {
         val list = new ArrayList<BoneInfluence>(6)
-        def add(BoneInfluence v) {
-            list.add(v)
+        def add(String boneName, float weight) {
+            list.add(new BoneInfluence(boneName, weight))
         }
         
         def influences() {
@@ -117,18 +118,28 @@ class Exporter {
             }
         }
         val nbChildren = node.mNumChildren
+        // apply node, children,...
+        for(var i = 0; i < nbChildren; i++){
+            val child = node.mChildren.get(aiNode, i)
+            val childName = child.mName.toString
+            val skeletons = nodeNameSkeletons.filter[v| v.key == childName]
+            if (skeletons.isEmpty) {
+                val childId = exportNodes(resTmp, scene, child, nodeNameSkeletons)
+                resTmp.out.addRelations(newRelation(obj.id, childId, null))
+            }
+        }
+        // apply skeleton (require to already have link children+meshes
         for(var i = 0; i < nbChildren; i++){
             val child = node.mChildren.get(aiNode, i)
             val childName = child.mName.toString
             val skeletons = nodeNameSkeletons.filter[v| v.key == childName]
             if (!skeletons.isEmpty) {
                 skeletons.forEach[v|
+                    //target skeleton bone to skin if available
                     log.debug("link skeleton {} to node ({}, {})", v.value.id, obj.id, obj.name)
                     resTmp.out.addRelations(newRelation(v.value.id, obj.id, null))
+                    //setupSkins(node, v)
                 ]
-            } else {
-                val childId = exportNodes(resTmp, scene, child, nodeNameSkeletons)
-                resTmp.out.addRelations(newRelation(obj.id, childId, null))
             }
         }
         resTmp.out.addTobjects(obj)
@@ -180,6 +191,7 @@ class Exporter {
             //TODO add checker about size, ...
             mdest.primitive = Primitive.triangles
             resTmp.meshes.put(i, mdest)
+            resTmp.skins.put(i, extractBonesInfluences(m))
             resTmp.out.addMeshes(mdest)
             resTmp.out.addRelations(newRelation(findMaterialId(m.mMaterialIndex), mdest.id, null))
         }
@@ -447,16 +459,28 @@ class Exporter {
         res
     }
 
-    def extractSkin(aiMesh mesh)  {
-         val BonesInfluence[] influences = newArrayOfSize(mesh.mNumVertices)
+    def extractBonesInfluences(aiMesh mesh)  {
+         val influences = <BonesInfluence>newArrayOfSize(mesh.mNumVertices)
          val nbBones = mesh.mNumBones
          for(var i=0; i < nbBones; i++){
              val bone = mesh.mBones.get(aiBone, i)
              val name = bone.mName.toString
              val nbinfluence = bone.mNumWeights
-             for(var j = 0; i < nbinfluence; j++) {
+             for(var j = 0; j < nbinfluence; j++) {
                 //TODO influences
+                val vweight = bone.mWeights.position(j) as aiVertexWeight
+                var lweights = influences.get(vweight.mVertexId)
+                if (lweights == null) {
+                    lweights = new BonesInfluence()
+                    influences.set(vweight.mVertexId, lweights)
+                }
+                lweights.add(name, vweight.mWeight)
              }
          }
+         influences
+    }
+    
+    def setupSkin(aiNode node, Skeleton skel) {
+        
     }
 }
