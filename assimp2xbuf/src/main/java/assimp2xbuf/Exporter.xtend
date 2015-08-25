@@ -45,6 +45,9 @@ import xbuf.Datas.Skeleton
 import org.slf4j.LoggerFactory
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import java.util.ArrayList
+import xbuf.Datas.Skin
+import java.util.TreeMap
+import java.util.List
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -114,7 +117,7 @@ class Exporter {
               	m.vertexArraysList.forEach[va|
               		log.debug("---- export vertexarray: " + va.attrib.name)
               	]
-                resTmp.out.addRelations(newRelation(m.id, obj.id, null))
+                resTmp.out.addRelations(newRelation(Mesh, m.id, TObject, obj.id, null))
             }
         }
         val nbChildren = node.mNumChildren
@@ -125,7 +128,7 @@ class Exporter {
             val skeletons = nodeNameSkeletons.filter[v| v.key == childName]
             if (skeletons.isEmpty) {
                 val childId = exportNodes(resTmp, scene, child, nodeNameSkeletons)
-                resTmp.out.addRelations(newRelation(obj.id, childId, null))
+                resTmp.out.addRelations(newRelation(TObject, obj.id, TObject, childId, null))
             }
         }
         // apply skeleton (require to already have link children+meshes
@@ -136,9 +139,8 @@ class Exporter {
             if (!skeletons.isEmpty) {
                 skeletons.forEach[v|
                     //target skeleton bone to skin if available
-                    log.debug("link skeleton {} to node ({}, {})", v.value.id, obj.id, obj.name)
-                    resTmp.out.addRelations(newRelation(v.value.id, obj.id, null))
-                    //setupSkins(node, v)
+                    resTmp.out.addRelations(newRelation(Skeleton, v.value.id, TObject, obj.id, null))
+                    setupSkins(node, v.value.bonesList, resTmp)
                 ]
             }
         }
@@ -191,9 +193,11 @@ class Exporter {
             //TODO add checker about size, ...
             mdest.primitive = Primitive.triangles
             resTmp.meshes.put(i, mdest)
-            resTmp.skins.put(i, extractBonesInfluences(m))
+            val boneInfluences = extractBonesInfluences(m)
+            log.debug("prepare skin of mesh #{}, with nb boneInfluences : {}", i, boneInfluences.size)
+            resTmp.skins.put(i, boneInfluences)
             resTmp.out.addMeshes(mdest)
-            resTmp.out.addRelations(newRelation(findMaterialId(m.mMaterialIndex), mdest.id, null))
+            resTmp.out.addRelations(newRelation(Material, findMaterialId(m.mMaterialIndex), Mesh, mdest.id, null))
         }
     }
 
@@ -232,6 +236,16 @@ class Exporter {
         } else null
     }
 
+    def Relation.Builder newRelation(Class<?> typ1, String ref1, Class<?> typ2, String ref2, String label) {
+        if (typ1.simpleName <= typ2.simpleName) {
+            log.debug("link {}({}) to {}({})", typ1.simpleName, ref1, typ2.simpleName, ref2)
+            newRelation(ref1, ref2, label)
+        } else {
+            log.debug("link {}({}) to {}({})", typ2.simpleName, ref2, typ1.simpleName, ref1)
+            newRelation(ref2, ref1, label)
+        }                
+    }
+  
     def Relation.Builder newRelation(String ref1, String ref2, String label) {
         val out = Relation.newBuilder()
         out.ref1 = ref1
@@ -479,8 +493,56 @@ class Exporter {
          }
          influences
     }
+
+    def makeBoneIndexes(List<Bone> bones) {
+        val b = new HashMap<String, Integer>()
+        for(var i = 0; i < bones.size; i++) {
+            b.put(bones.get(i).name, i)
+        }
+        new TreeMap(b)
+    }
+
+    def setupSkins(aiNode node, List<Bone> bones, ResultsTmp resTmp) {
+        val boneIndexes = makeBoneIndexes(bones)
+        setupSkinOnNodes(node, boneIndexes, resTmp)
+    }
     
-    def setupSkin(aiNode node, Skeleton skel) {
-        
+    def void setupSkinOnNodes(aiNode node, Map<String, Integer> boneIndexes, ResultsTmp resTmp) {
+        for(var i = 0; i < node.mNumChildren; i++) {
+            setupSkinOnNodes(node.mChildren.get(aiNode, i), boneIndexes, resTmp)
+        }
+        if (node.mNumMeshes != 0) {
+            setupSkinOnMeshes(node, boneIndexes, resTmp)
+        }
+    }
+
+    def setupSkinOnMeshes(aiNode node, Map<String, Integer> boneIndexes, ResultsTmp resTmp) {
+        log.debug("try to setupSkins for nb mesh : {}", node.mNumMeshes)        
+        for (var i = 0; i < node.mNumMeshes; i++) {
+            val numMesh = node.mMeshes.get(i)
+            val mesh = resTmp.meshes.get(numMesh)
+            val boneInfluences = resTmp.skins.get(numMesh)
+            if (boneInfluences != null && boneInfluences.size > 0) {
+                log.debug("export skin on mesh : {}", mesh.id)
+                val floats = mesh.vertexArraysList.get(0).floats
+                val nbVertices = floats.valuesCount / floats.step
+                if (nbVertices != boneInfluences.size) {
+                    log.warn("number of vertices({}) != number of boneInfluences({})", nbVertices, boneInfluences.size)
+                } else {
+                    val skin = Skin.newBuilder()
+                    for(var vertexI = 0; vertexI < nbVertices; vertexI++) {
+                        val boneInfluence = boneInfluences.get(vertexI)?.influences()
+                        val lg = if (boneInfluence != null) boneInfluence.size else 0
+                        skin.addBoneCount(lg)
+                        for(var boneI = 0; boneI < lg; boneI++) {
+                            val influence = boneInfluence.get(boneI)
+                            skin.addBoneIndex(boneIndexes.get(influence.boneName))
+                            skin.addBoneWeight(influence.weight)
+                        }
+                    }
+                    mesh.skin = skin 
+                }
+            }
+        }
     }
 }
