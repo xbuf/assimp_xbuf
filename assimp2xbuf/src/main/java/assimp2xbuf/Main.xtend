@@ -13,6 +13,7 @@ import java.util.HashSet
 import java.util.ArrayList
 import xbuf.Datas.Bone
 import xbuf.Datas.Skeleton
+import xbuf_ext.AnimationsKf
 
 class Main {
 	def static void main(String[] args) {
@@ -98,6 +99,7 @@ class Main {
             System.out.printf("nb relations:  %s\n", out.relationsCount);
             System.out.printf("nb skeletons: %s\n", out.skeletonsCount);
             System.out.printf("nb tobjects:  %s\n", out.tobjectsCount);
+            System.out.printf("nb animationKfs:  %s\n", out.getExtension(AnimationsKf.animationsKf).size);
 		}
 	}
 	

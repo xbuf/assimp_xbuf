@@ -49,6 +49,8 @@ import xbuf.Datas.Skin
 import java.util.TreeMap
 import java.util.List
 import com.google.protobuf.ExtensionRegistry
+import xbuf_ext.CustomParams
+import xbuf_ext.AnimationsKf
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -57,6 +59,7 @@ import com.google.protobuf.ExtensionRegistry
 //TODO Xbuf support displacement Map, HeightMap, LightMap, see aiTextureType_XXXX
 //TODO Xbuf assign Material to Mesh
 //TODO inverse the roughnessMap (from shininessMap)
+//tuto about animation: [Tutorial 38 - Skeletal Animation With Assimp](http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html)
 class Exporter {
     val log = LoggerFactory.getLogger(this.getClass)
     
@@ -94,7 +97,7 @@ class Exporter {
     def String findMeshId(int i) { "_mesh_" + i}
     def String findMaterialId(int i) { "_material_" + i}
     
-    this(){
+    new(){
     	setupExtensionRegistry(ExtensionRegistry.newInstance())
 	}
 
