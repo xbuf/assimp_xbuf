@@ -48,6 +48,7 @@ import java.util.ArrayList
 import xbuf.Datas.Skin
 import java.util.TreeMap
 import java.util.List
+import com.google.protobuf.ExtensionRegistry
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -92,6 +93,16 @@ class Exporter {
 
     def String findMeshId(int i) { "_mesh_" + i}
     def String findMaterialId(int i) { "_material_" + i}
+    
+    this(){
+    	setupExtensionRegistry(ExtensionRegistry.newInstance())
+	}
+
+	protected def ExtensionRegistry setupExtensionRegistry(ExtensionRegistry r) {
+		CustomParams.registerAllExtensions(r)
+		AnimationsKf.registerAllExtensions(r)
+		r
+    }
 
     def export(aiScene... scenes) {
     	val resTmp = new ResultsTmp()
@@ -106,6 +117,7 @@ class Exporter {
         val nodeNameSkeletons = exportSkeletons(resTmp, scene)
         exportMeshes(resTmp, scene)
 	    exportNodes(resTmp, scene, scene.mRootNode(), nodeNameSkeletons)
+	    exportAnimations(resTmp, scene)
 	    resTmp
 	}
 
@@ -549,4 +561,9 @@ class Exporter {
             }
         }
     }
+    
+    def exportAnimations(ResultsTmp resTmp, aiScene scene) {
+    	
+    }
+    
 }
