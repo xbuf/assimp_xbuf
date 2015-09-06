@@ -93,8 +93,12 @@ class Exporter {
     def String findMeshId(int i) { "_mesh_" + i}
     def String findMaterialId(int i) { "_material_" + i}
 
-    def export(aiScene scene) {
-        export(new ResultsTmp(), scene).out
+    def export(aiScene... scenes) {
+    	val resTmp = new ResultsTmp()
+    	for(scene: scenes){
+	        export(resTmp, scene)
+    	}
+    	resTmp.out
     }
 
 	def export(ResultsTmp resTmp, aiScene scene) {

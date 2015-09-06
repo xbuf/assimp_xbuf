@@ -3,11 +3,9 @@ package assimp2xbuf
 import assimp.Assimp.Importer
 
 import static assimp.aiPostProcessSteps.*
-import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import xbuf.Datas.Data
-import java.util.LinkedList
 import xbuf.Datas.TObject
 import xbuf.Datas.Vec3
 import java.util.HashMap
@@ -18,57 +16,79 @@ import xbuf.Datas.Skeleton
 
 class Main {
 	def static void main(String[] args) {
-		//val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/assimp/models/Collada/duck.dae"
-        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
-		//val inputDir = FileSystems.getDefault().getPath(inputPath).parent
-
-        val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
+		//val inputPath = System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models/Collada/duck.dae"
+        val inputPaths0 = #[
+        	System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models-nonbsd/MD5/Bob.md5mesh",
+        	System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models-nonbsd/MD5/Bob.md5anim"
+        ]
+        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
         //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.dae"
-        val inputDir = FileSystems.getDefault().getPath(inputPath).parent
 
 		//val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
 		//val inputPath = doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
 		//val inputDir = FileSystems.getDefault().getPath(doom3Root)
 
-        val outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
-		val outputFile = outputDir.resolve(FileSystems.getDefault().getPath(new File(inputPath).name + ".xbuf"))
-
 
 		//val outputPath = args.get(0)
 		//val inputPath = args.get(1)
 
-		if (!new File(inputPath).exists) {
-		    System.err.println("file not found : " + inputPath)
+		val inputPaths = inputPaths0.map[p|
+        	FileSystems.getDefault().getPath(p)
+        ].filter[p|
+        	val exists = p.toFile.exists
+			if (!exists) {
+		    	System.err.println("file not found : " + p)
+		    }
+			exists
+		].toList
+		if (inputPaths.empty) {
+		    System.err.println("file(s) not found: nothing todo")
 		    return
 		}
+        val inputDirs = inputPaths.map[p| p.parent].toList
+
+        val outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
+		val outputFile = outputDir.resolve(FileSystems.getDefault().getPath(inputPaths.get(0).last + ".xbuf"))
 
 		val importer = new Importer()
-		val scene = importer.ReadFile(inputPath,
-			0.bitwiseOr(aiProcess_CalcTangentSpace)
-		    //.bitwiseOr(aiProcess_FlipWindingOrder)
-		    .bitwiseOr(aiProcess_GenUVCoords)
-		    .bitwiseOr(aiProcess_GenSmoothNormals)
-		    .bitwiseOr(aiProcess_OptimizeGraph)
-		    .bitwiseOr(aiProcess_OptimizeMeshes)
-		    //.bitwiseOr(aiProcess_FlipUVs)
-		    .bitwiseOr(aiProcess_Triangulate)
-		    .bitwiseOr(aiProcess_JoinIdenticalVertices)
-		    .bitwiseOr(aiProcess_SortByPType)
-		)
+		val scenes = inputPaths.map[p|
+			val scene = importer.ReadFile(p.toString,
+				0.bitwiseOr(aiProcess_CalcTangentSpace)
+			    //.bitwiseOr(aiProcess_FlipWindingOrder)
+			    .bitwiseOr(aiProcess_GenUVCoords)
+			    .bitwiseOr(aiProcess_GenSmoothNormals)
+			    .bitwiseOr(aiProcess_OptimizeGraph)
+			    .bitwiseOr(aiProcess_OptimizeMeshes)
+			    //.bitwiseOr(aiProcess_FlipUVs)
+			    .bitwiseOr(aiProcess_Triangulate)
+			    .bitwiseOr(aiProcess_JoinIdenticalVertices)
+			    .bitwiseOr(aiProcess_SortByPType)
+			)
+			if (scene == null) {
+				System.out.printf("empty scene !! for " + p)
+			}
+			scene
+		].filter[it != null].toList
 
 		// If the import failed, report it
-		if( scene != null) {
+		if( !scenes.empty) {
 		    val exporter = new Exporter()
 			exporter.textureInPathTransform = [ AssetPath v |
 				// HACK for texture from DOOM3
 				val str = v.rpath.replace("_d.tga", ".tga").replace("_local.tga", "_h.tga")
-				new AssetPath(str, inputDir.resolve(str))
+				var found = inputDirs.findFirst[d|
+					d.resolve(str).toFile.exists
+				]
+				if (found == null) {
+					found = inputDirs.get(0)
+				}
+				new AssetPath(str, found.resolve(str))
 			]
 			exporter.textureOutPathTransform = [ AssetPath v |
 				val rpath = "Textures/" + v.path.fileName
 				new AssetPath(rpath, outputDir.resolve(rpath))
 			]
-			val out = exporter.export(scene)
+			val out = exporter.export(scenes)
 			rescale(out, 0.05f)
 			val output = Files.newOutputStream(outputFile)
 			out.build().writeTo(output)
@@ -78,8 +98,6 @@ class Main {
             System.out.printf("nb relations:  %s\n", out.relationsCount);
             System.out.printf("nb skeletons: %s\n", out.skeletonsCount);
             System.out.printf("nb tobjects:  %s\n", out.tobjectsCount);
-		} else {
-			System.out.printf("empty scene !!")
 		}
 	}
 	
