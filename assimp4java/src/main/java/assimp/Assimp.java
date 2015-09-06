@@ -40,6 +40,8 @@ public class Assimp {
 		@MemberGetter public native @Cast("aiMaterial**") PointerPointer<aiMaterial> mMaterials();
 		@MemberGetter public native int mNumMaterials();
 	    @MemberGetter public native aiNode mRootNode();
+		@MemberGetter public native @Cast("aiAnimation**") PointerPointer<aiAnimation> mAnimations();
+		@MemberGetter public native int mNumAnimations();
 	}
 	
 	public static class aiNode extends Pointer {
@@ -214,6 +216,44 @@ public class Assimp {
 				@Cast("aiTextureOp *") Pointer op,
 				@Cast("aiTextureMapMode *") Pointer mapmode); 	
 	}
+	public static class aiAnimation extends Pointer {
+		static { Loader.load(); }
+		@MemberGetter public native @ByVal aiString mName();
+		@MemberGetter public native @Cast("aiNodeAnim**") PointerPointer<aiNodeAnim> mChannels();
+		@MemberGetter public native @Cast("unsigned int") int mNumChannels();
+		@MemberGetter public native double mDuration();
+		@MemberGetter public native double mTicksPerSecond();
+//		@MemberGetter public native @Cast("aiMeshAnim**") PointerPointer<aiMeshAnim> mMeshChannels();
+//		@MemberGetter public native @Cast("unsigned int") int mNumMeshChannels();
+	}
+	public static class aiNodeAnim extends Pointer {
+		static { Loader.load(); }
+		@MemberGetter public native @ByVal aiString mNodeName();
+		@MemberGetter public native @Cast("unsigned int") int mNumPositionKeys();
+		@MemberGetter public native @Cast("unsigned int") int mNumRotationKeys();
+		@MemberGetter public native @Cast("unsigned int") int mNumScalingKeys();
+		@MemberGetter public native aiVectorKey mPositionKeys();
+		@MemberGetter public native aiQuatKey mRotationKeys();
+		@MemberGetter public native aiVectorKey mScalingKeys();
+		@MemberGetter public native @Cast("aiAnimBehaviour") int mPostState();
+		@MemberGetter public native @Cast("aiAnimBehaviour") int mPreState();
+	}
+	public static class aiVectorKey extends Pointer {
+		static { Loader.load(); }
+		@MemberGetter public native double mTime();
+		@MemberGetter public native @ByVal aiVector3D mValue();
+	}
+	public static class aiQuatKey extends Pointer {
+		static { Loader.load(); }
+		@MemberGetter public native double mTime();
+		@MemberGetter public native @ByVal aiQuaternion mValue();
+	}
+	public static class aiMeshAnim extends Pointer {
+	static { Loader.load(); }
+}
+//	public static class aiMeshAnim extends Pointer {
+//		static { Loader.load(); }
+//	}
 }
 
 
