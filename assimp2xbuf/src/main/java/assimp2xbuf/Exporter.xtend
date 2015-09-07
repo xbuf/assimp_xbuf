@@ -1,56 +1,57 @@
 package assimp2xbuf
 
-import assimp.Assimp.aiNode
-import assimp.Assimp.aiScene
-import assimp.Assimp.aiMesh
+import assimp.Assimp
+import assimp.Assimp.aiBone
+import assimp.Assimp.aiColor3D
+import assimp.Assimp.aiColor4D
 import assimp.Assimp.aiFace
 import assimp.Assimp.aiMaterial
 import assimp.Assimp.aiMatrix4x4
-import assimp.Assimp.aiVector3D
+import assimp.Assimp.aiMesh
+import assimp.Assimp.aiNode
 import assimp.Assimp.aiQuaternion
-import assimp.Assimp.aiColor3D
-import assimp.Assimp.aiColor4D
+import assimp.Assimp.aiScene
 import assimp.Assimp.aiString
-import assimp.Assimp.aiBone
+import assimp.Assimp.aiVector3D
 import assimp.Assimp.aiVertexWeight
+import com.google.protobuf.ExtensionRegistry
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.ArrayList
+import java.util.Collection
+import java.util.HashMap
+import java.util.HashSet
+import java.util.List
+import java.util.Map
+import java.util.Optional
+import java.util.TreeMap
+import java.util.UUID
+import org.bytedeco.javacpp.FloatPointer
+import org.bytedeco.javacpp.IntPointer
+import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import org.slf4j.LoggerFactory
+import xbuf.Datas.Bone
+import xbuf.Datas.Color
 import xbuf.Datas.Data
-import xbuf.Datas.TObject
-import xbuf.Datas.Transform
-import xbuf.Datas.Vec3
+import xbuf.Datas.IndexArray
+import xbuf.Datas.Material
+import xbuf.Datas.Mesh
+import xbuf.Datas.Mesh.Primitive
 import xbuf.Datas.Quaternion
 import xbuf.Datas.Relation
-import java.util.UUID
-import xbuf.Datas.Mesh
-import xbuf.Datas.VertexArray
-import xbuf.Datas.IndexArray
-import xbuf.Datas.Mesh.Primitive
-import java.util.HashMap
-import assimp.Assimp
-import xbuf.Datas.Material
-import xbuf.Datas.Color
-import org.bytedeco.javacpp.FloatPointer
-import xbuf.Datas.Texture
-import java.util.Optional
-import java.nio.file.Files
-import java.nio.file.FileSystems
-import java.nio.file.StandardCopyOption
-import org.bytedeco.javacpp.IntPointer
-import static assimp.aiTextureType.*
-import static assimp.aiShadingMode.*
-import java.util.HashSet
-import java.util.Collection
-import java.util.Map
-import xbuf.Datas.Bone
 import xbuf.Datas.Skeleton
-import org.slf4j.LoggerFactory
-import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
-import java.util.ArrayList
 import xbuf.Datas.Skin
-import java.util.TreeMap
-import java.util.List
-import com.google.protobuf.ExtensionRegistry
-import xbuf_ext.CustomParams
+import xbuf.Datas.TObject
+import xbuf.Datas.Texture
+import xbuf.Datas.Transform
+import xbuf.Datas.Vec3
+import xbuf.Datas.VertexArray
 import xbuf_ext.AnimationsKf
+import xbuf_ext.CustomParams
+
+import static assimp.aiShadingMode.*
+import static assimp.aiTextureType.*
 
 //TODO transform to the correct convention yup, zforward, 1 unit == 1 meter
 //TODO UV /textcoords in a 2D FloatBuffer
@@ -86,13 +87,13 @@ class Exporter {
             list.sortBy[v| -v.weight]
         }
     }
-    
+
+	static def String newId() {
+        UUID.randomUUID.toString
+    }    
+
     public var textureInPathTransform = [ AssetPath v | v ]
     public var textureOutPathTransform = [ AssetPath v | v ]
-
-    def String newId() {
-        UUID.randomUUID.toString
-    }
 
     def String findMeshId(int i) { "_mesh_" + i}
     def String findMaterialId(int i) { "_material_" + i}
@@ -109,8 +110,10 @@ class Exporter {
 
     def export(aiScene... scenes) {
     	val resTmp = new ResultsTmp()
+    	val eanim = new Exporter4Animation()
     	for(scene: scenes){
 	        export(resTmp, scene)
+	        eanim.exportAnimations(resTmp, scene)
     	}
     	resTmp.out
     }
@@ -120,7 +123,6 @@ class Exporter {
         val nodeNameSkeletons = exportSkeletons(resTmp, scene)
         exportMeshes(resTmp, scene)
 	    exportNodes(resTmp, scene, scene.mRootNode(), nodeNameSkeletons)
-	    exportAnimations(resTmp, scene)
 	    resTmp
 	}
 
@@ -565,8 +567,6 @@ class Exporter {
         }
     }
     
-    def exportAnimations(ResultsTmp resTmp, aiScene scene) {
-    	
-    }
+
     
 }
