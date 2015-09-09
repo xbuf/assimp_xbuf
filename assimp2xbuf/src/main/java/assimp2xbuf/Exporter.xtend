@@ -64,11 +64,12 @@ import static assimp.aiTextureType.*
 class Exporter {
     val log = LoggerFactory.getLogger(this.getClass)
     
+    @FinalFieldsConstructor
     static class ResultsTmp {
-        val out = Data.newBuilder()
-        val meshes = new HashMap<Integer, Mesh.Builder>()
-        val skins = new HashMap<Integer, BonesInfluence[]>()
-        val materials = new HashMap<Integer, Material.Builder>()
+        public val Data.Builder out
+        public val meshes = new HashMap<Integer, Mesh.Builder>()
+        public val skins = new HashMap<Integer, BonesInfluence[]>()
+        public val materials = new HashMap<Integer, Material.Builder>()
     }
 
     @FinalFieldsConstructor
@@ -108,14 +109,12 @@ class Exporter {
 		r
     }
 
-    def export(aiScene... scenes) {
-    	val resTmp = new ResultsTmp()
+    def export(aiScene scene, Data.Builder out) {
     	val eanim = new Exporter4Animation()
-    	for(scene: scenes){
-	        export(resTmp, scene)
-	        eanim.exportAnimations(resTmp, scene)
-    	}
-    	resTmp.out
+        val resTmp = new ResultsTmp(out)
+        export(resTmp, scene)
+        eanim.exportAnimations(resTmp, scene)
+    	out
     }
 
 	def export(ResultsTmp resTmp, aiScene scene) {
@@ -170,6 +169,7 @@ class Exporter {
     }
 
     def exportMeshes(ResultsTmp resTmp, aiScene scene) {
+        if (!scene.HasMeshes()) return;
         for(var i =  scene.mNumMeshes - 1; i >= 0; i--){
             val m = scene.mMeshes.get(aiMesh, i)
             val mdest = Mesh.newBuilder()
@@ -313,7 +313,8 @@ class Exporter {
     }
 
     def exportMaterials(ResultsTmp resTmp, aiScene scene) {
-    	for(var i =  scene.mNumMaterials - 1; i >= 0; i--){
+        if (!scene.HasMaterials()) return;
+    	for(var i = 0; i < scene.mNumMaterials ; i++){
             val m = scene.mMaterials.get(aiMaterial, i)
             val mdest = Material.newBuilder()
             mdest.id = findMaterialId(i)
@@ -404,8 +405,12 @@ class Exporter {
 	}
     
     def exportSkeletons(ResultsTmp resTmp, aiScene scene) {
-        val rboneNames = findRBoneNames(scene)
-        extractSkeleton(resTmp, scene.mRootNode, rboneNames)
+        if (scene.mRootNode == null) {
+            new HashSet<Pair<String, Skeleton.Builder>>()
+        } else {
+            val rboneNames = findRBoneNames(scene)
+            extractSkeleton(resTmp, scene.mRootNode, rboneNames)
+        }
     }
 
     def findRBoneNames(aiScene scene) {
@@ -538,9 +543,9 @@ class Exporter {
     }
 
     def setupSkinOnMeshes(aiNode node, Map<String, Integer> boneIndexes, ResultsTmp resTmp) {
-        log.debug("try to setupSkins for nb mesh : {}", node.mNumMeshes)        
+        log.debug("try to setupSkins for nb mesh : {}", node.mNumMeshes)       
         for (var i = 0; i < node.mNumMeshes; i++) {
-            val numMesh = node.mMeshes.get(i)
+            val numMesh = node.mMeshes.position(i)
             val mesh = resTmp.meshes.get(numMesh)
             val boneInfluences = resTmp.skins.get(numMesh)
             if (boneInfluences != null && boneInfluences.size > 0) {

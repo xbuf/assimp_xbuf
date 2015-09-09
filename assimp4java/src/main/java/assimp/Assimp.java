@@ -48,7 +48,7 @@ public class Assimp {
 		static { Loader.load(); }
 		public native aiNode FindNode(String name);
 		@MemberGetter public native @Cast("aiNode**") PointerPointer<aiNode> mChildren();
-		@MemberGetter public native @Cast("unsigned int*") int[] mMeshes();
+		@MemberGetter public native @Cast("unsigned int*") IntPointer mMeshes();
 		@MemberGetter public native @ByVal aiString mName();
 		@MemberGetter public native int mNumChildren();
 		@MemberGetter public native int mNumMeshes();
@@ -146,7 +146,7 @@ public class Assimp {
 		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mNormals();
 		@MemberGetter public native @Cast("unsigned int") int mNumBones();
 		@MemberGetter public native @Cast("unsigned int") int mNumFaces();
-		@MemberGetter public native @Cast("unsigned int*") int[] mNumUVComponents();// [AI_MAX_NUMBER_OF_TEXTURECOORDS]
+		@MemberGetter public native @Cast("unsigned int*") IntPointer mNumUVComponents();// [AI_MAX_NUMBER_OF_TEXTURECOORDS]
 		@MemberGetter public native @Cast("unsigned int") int mNumVertices();
 		@MemberGetter public native @Cast("unsigned int") int mPrimitiveTypes();
 		@MemberGetter public native @Cast("aiVector3D*") aiVector3D mTangents();
