@@ -1,55 +1,108 @@
 package assimp2xbuf
 
 import assimp.Assimp.Importer
-
-import static assimp.aiPostProcessSteps.*
+import com.beust.jcommander.JCommander
+import com.beust.jcommander.Parameter
+import com.beust.jcommander.ParameterException
 import java.nio.file.FileSystems
 import java.nio.file.Files
-import xbuf.Datas.Data
-import xbuf.Datas.TObject
-import xbuf.Datas.Vec3
+import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
-import java.util.ArrayList
+import java.util.List
 import xbuf.Datas.Bone
+import xbuf.Datas.Data
 import xbuf.Datas.Skeleton
+import xbuf.Datas.TObject
+import xbuf.Datas.Vec3
 import xbuf_ext.AnimationsKf
 
+import static assimp.aiPostProcessSteps.*
+import xbuf_ext.AnimationsKf.AnimationKF
+
 class Main {
-	def static void main(String[] args) {
-		//val inputPath = System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models/Collada/duck.dae"
-        val inputPaths0 = #[
-        	System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models-nonbsd/MD5/Bob.md5mesh",
-        	System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models-nonbsd/MD5/Bob.md5anim"
-        ]
-        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
-        //val inputPath = System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.dae"
+    static def main(String[] args) {
+        var args0 = args
+        if (args.isEmpty) {
+            //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models/Collada/duck.dae"
+            args0 = #[
+                System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
+                //,System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5anim"
+            ]
+            //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
+            //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.dae"
+    
+            //val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
+            //args0 = #[doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
+            //val inputDir = FileSystems.getDefault().getPath(doom3Root)
+        }        
+        val options = new Options()
+        val jc = new JCommander(options)
+        try {
+            jc.parse(args0)
+            if (options.help) {
+                jc.usage()
+            } else {
+                run(options)
+            }
+        } catch(ParameterException exc) {
+            jc.usage()
+            System.err.println(exc.getMessage())
+            System.exit(-2)
+        } catch(Exception exc) {
+            exc.printStackTrace()
+            System.exit(-1)
+        }
+    }
 
-		//val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
-		//val inputPath = doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
-		//val inputDir = FileSystems.getDefault().getPath(doom3Root)
+    static class Options {
+        @Parameter(names = #["-h", "-?", "--help"], help = true)
+        private var boolean help;
 
+        @Parameter(description = "input files")
+        private var List<String> inputFiles = new ArrayList<String>();
 
-		//val outputPath = args.get(0)
-		//val inputPath = args.get(1)
+        @Parameter(names=#["--inputdirs"], description = "input directories for additional files(eg texture, sound, ...)")
+        private var List<String> inputDirs = new ArrayList<String>();
 
-		val inputPaths = inputPaths0.map[p|
+        @Parameter(names = #["--outputfile", "-o"], description = "output xbuf file")
+        private var String outputFile = "";
+
+        @Parameter(names = #["--outputdir","-d"], description = "output directory for non-xbuf files (eg images)")
+        private var String outputDir = System.getProperty("user.dir");
+    }
+    
+	def static void run(Options options) {
+		val inputPaths = options.inputFiles.map[p|
         	FileSystems.getDefault().getPath(p)
         ].filter[p|
-        	val exists = p.toFile.exists
+            val f = p.toFile
+        	val exists = f.exists && f.isFile && f.canRead
 			if (!exists) {
 		    	System.err.println("file not found : " + p)
 		    }
 			exists
 		].toList
 		if (inputPaths.empty) {
-		    System.err.println("file(s) not found: nothing todo")
+		    System.err.println("file(s) not found: nothing to do")
 		    return
 		}
-        val inputDirs = inputPaths.map[p| p.parent].toList
 
-        val outputDir = FileSystems.getDefault().getPath(System.getProperty("user.dir"))
-		val outputFile = outputDir.resolve(FileSystems.getDefault().getPath(inputPaths.get(0).last + ".xbuf"))
+        val inputDirs = options.inputDirs.map[p|
+            FileSystems.getDefault().getPath(p)
+        ].filter[p|
+            val f = p.toFile
+            val exists = f.exists && f.isDirectory && f.canRead 
+            if (!exists) {
+                System.err.println("directory not found : " + p)
+            }
+            exists
+        ].toList
+        inputDirs.addAll(inputPaths.map[p| p.parent])
+
+        val outputDir = FileSystems.getDefault().getPath(options.outputDir)
+        val of = if (options.outputFile.isNullOrEmpty) inputPaths.get(0).last + ".xbuf" else options.outputFile
+		val outputFile = outputDir.resolve(FileSystems.getDefault().getPath(of))
 
 		val importer = new Importer()
 		val scenes = inputPaths.map[p|
@@ -69,7 +122,7 @@ class Main {
 				System.out.printf("empty scene !! for " + p)
 			}
 			scene
-		].filter[it != null].toList
+		].filter[it != null]
 
 		// If the import failed, report it
 		if( !scenes.empty) {
@@ -89,24 +142,32 @@ class Main {
 				val rpath = "Textures/" + v.path.fileName
 				new AssetPath(rpath, outputDir.resolve(rpath))
 			]
-			val out = exporter.export(scenes)
-			rescale(out, 0.05f)
+			val out = scenes.fold(Data.newBuilder())[acc, scene| exporter.export(scene, acc)]
+			//rescale(out, 0.05f)
+			linkAnimationsToSkeleton(out, exporter)
 			val output = Files.newOutputStream(outputFile)
 			out.build().writeTo(output)
 			output.close()
-            System.out.printf("nb materials:  %s\n", out.materialsCount);
-            System.out.printf("nb meshes:  %s\n", out.meshesCount);
-            System.out.printf("nb relations:  %s\n", out.relationsCount);
-            System.out.printf("nb skeletons: %s\n", out.skeletonsCount);
-            System.out.printf("nb tobjects:  %s\n", out.tobjectsCount);
+            System.out.printf("nb materials:     %s\n", out.materialsCount);
+            System.out.printf("nb meshes:        %s\n", out.meshesCount);
+            System.out.printf("nb relations:     %s\n", out.relationsCount);
+            System.out.printf("nb skeletons:     %s\n", out.skeletonsCount);
+            System.out.printf("nb tobjects:      %s\n", out.tobjectsCount);
             System.out.printf("nb animationKfs:  %s\n", out.getExtension(AnimationsKf.animationsKf).size);
+            System.out.printf("output file:      %s\n", outputFile)
+            System.out.printf("output dir:       %s\n", outputDir)
 		}
 	}
-	
-	static def aabb(Data.Builder data){
-	    
-	}
-	
+
+    static def linkAnimationsToSkeleton(Data.Builder data, Exporter exporter) {
+        if (data.skeletonsCount == 1) {
+            val skeleton = data.getSkeletons(0)
+            for (anim: data.getExtension(AnimationsKf.animationsKf)) {
+                //TODO check if animation is compatible with skeleton
+                data.addRelations(exporter.newRelation(AnimationKF, anim.id, Skeleton, skeleton.id, null))
+            }
+        }
+    }
 	static def rescale(Data.Builder data, float coeff) {
 	    val tobjects = new HashMap<String, TObject.Builder>()
 	    val leafIds = new HashSet<String>()
