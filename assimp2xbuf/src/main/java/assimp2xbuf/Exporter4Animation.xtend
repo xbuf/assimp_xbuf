@@ -28,7 +28,7 @@ class Exporter4Animation {
                 val c = a.mChannels.get(aiNodeAnim, j)
                 val sampled = SampledTransform.newBuilder()
                 sampled.boneName = c.mNodeName.toString
-                var iPos = new V5k(0, 0, 0, 0, -1)
+                var iPos = new V5k(0, 0, 0, 0, -1) 
                 var iRot = new V5k(0, 0, 0, 1, -1)
                 var iSca = new V5k(1, 1, 1, 1, -1)
                 val keys = findAtKeys(c)
@@ -37,25 +37,28 @@ class Exporter4Animation {
                     // ignore duplicate
                     if (prevk != k) {
                         prevk = k
-                        sampled.addAt(k)
+                        sampled.addAt((k / a.mTicksPerSecond) as int)
                         if (c.mNumPositionKeys > 0) {
                             iPos = interpolateVect3(k, c.mNumPositionKeys, c.mPositionKeys, iPos)
                             sampled.addTranslationX(iPos.x)
                             sampled.addTranslationY(iPos.y)
                             sampled.addTranslationZ(iPos.z)
+                            println(k + "\tiPos\t" + iPos)
                         }
                         if (c.mNumRotationKeys > 0) {
-                            iSca = interpolateQuat(k, c.mNumRotationKeys, c.mRotationKeys, iSca)
+                            iRot = interpolateQuat(k, c.mNumRotationKeys, c.mRotationKeys, iRot)
                             sampled.addRotationX(iRot.x)
                             sampled.addRotationY(iRot.y)
                             sampled.addRotationZ(iRot.z)
                             sampled.addRotationW(iRot.w)
+                            println(k + "\tiRot\t" + iRot)
                         }
                         if (c.mNumScalingKeys > 0) {
                             iSca = interpolateVect3(k, c.mNumScalingKeys, c.mScalingKeys, iSca)
                             sampled.addScaleX(iSca.x)
                             sampled.addScaleY(iSca.y)
                             sampled.addScaleZ(iSca.z)
+                            println(k + "\tiSca\t" + iSca)
                         }
                     }
                 }
@@ -63,6 +66,7 @@ class Exporter4Animation {
                 cdest.sampledTransform = sampled
                 if (sampled.atCount >1) {
                     adest.addClips(cdest)
+                    println("added sampled for " + sampled.boneName)
                 }
             }
             if (adest.clipsCount > 0) {
@@ -133,13 +137,13 @@ class Exporter4Animation {
         } else if (kt > at) {
             if (i == 0) {
                 val ratio = ((at - 0) as float) / ((kt - 0f) as float)
-                linear(ratio, previous, kv)
+                slerp(ratio, previous, kv)
             } else {
                 val kp = (keys.position(i) as aiVectorKey)
                 val kpt = kp.mTime * 1000
                 val kpv = new V5k(kp.mValue.x, kp.mValue.y, kp.mValue.z, 0, i)
                 val ratio = ((at - kpt) as float) / ((kt - kpt) as float)
-                linear(ratio, kpv, kv)
+                slerp(ratio, kpv, kv)
             }
         } else {
             kv
@@ -158,6 +162,51 @@ class Exporter4Animation {
             linear(ratio, p0.z, p1.z),
             linear(ratio, p0.w, p1.w),
             p0.i
+        )
+    }
+    
+    // copied from jMonkeyEngine3
+    def slerp(float t, V5k q1, V5k q2) {
+        // Create a local quaternion to store the interpolated quaternion
+        if (q1.x == q2.x && q1.y == q2.y && q1.z == q2.z && q1.w == q2.w) {
+            return q1;
+        }
+
+        var result = (q1.x * q2.x) + (q1.y * q2.y) + (q1.z * q2.z)
+                + (q1.w * q2.w);
+
+        val q2r = if (result < 0.0f) {
+            // Negate the second quaternion and the result of the dot product
+            result = -result
+            new V5k(-q2.x, -q2.y, -q2.z, -q2.w, q2.i)
+        } else { q2}
+
+        // Set the first and second scale for the interpolation
+        var scale0 = 1 - t;
+        var scale1 = t;
+
+        // Check if the angle between the 2 quaternions was big enough to
+        // warrant such calculations
+        if ((1 - result) > 0.1f) {// Get the angle between the 2 quaternions,
+            // and then store the sin() of that angle
+            val theta = Math.acos(result);
+            val invSinTheta = 1f / Math.sin(theta);
+
+            // Calculate the scale for q1 and q2, according to the angle and
+            // it's sine value
+            scale0 = (Math.sin((1 - t) * theta) * invSinTheta) as float
+            scale1 = (Math.sin((t * theta)) * invSinTheta) as float
+        }
+
+        // Calculate the x, y, z and w values for the quaternion by using a
+        // special
+        // form of linear interpolation for quaternions.
+        new V5k(
+            (scale0 * q1.x) + (scale1 * q2r.x),
+            (scale0 * q1.y) + (scale1 * q2r.y),
+            (scale0 * q1.z) + (scale1 * q2r.z),
+            (scale0 * q1.w) + (scale1 * q2r.w),
+            q1.i
         )
     }
 }
