@@ -18,6 +18,8 @@ import xbuf.Tobjects.TObject
 import xbuf_ext.AnimationsKf.AnimationKF
 
 import static assimp.aiPostProcessSteps.*
+import xbuf_ext.AnimationsKf.Clip
+import xbuf_ext.AnimationsKf.SampledTransform
 
 class Main {
     static def main(String[] args) {
@@ -142,7 +144,7 @@ class Main {
 				new AssetPath(rpath, outputDir.resolve(rpath))
 			]
 			val out = scenes.fold(Data.newBuilder())[acc, scene| exporter.export(scene, acc)]
-			//rescale(out, 0.05f)
+			rescale(out, 0.05f)
 			linkAnimationsToSkeleton(out, exporter)
 			val output = Files.newOutputStream(outputFile)
 			out.build().writeTo(output)
@@ -207,6 +209,32 @@ class Main {
         }
         data.clearSkeletons()
         data.addAllSkeletons(nskeletons.map[it.build()])
+
+        val nanims = new ArrayList<AnimationKF.Builder>(data.animationsKfCount)
+        for(anim: data.animationsKfList) {
+            val nanim = AnimationKF.newBuilder(anim)
+            val nclips = new ArrayList<Clip.Builder>(anim.clipsCount)
+            for(clip: anim.clipsList) {
+                val nclip = Clip.newBuilder(clip)
+                val nsampled = SampledTransform.newBuilder(clip.sampledTransform)
+                val xs = nsampled.translationXList.map[v|v * coeff].toList
+                nsampled.clearTranslationX()
+                nsampled.addAllTranslationX(xs)
+                val ys = nsampled.translationYList.map[v|v * coeff].toList
+                nsampled.clearTranslationY()
+                nsampled.addAllTranslationY(ys)
+                val zs = nsampled.translationZList.map[v|v * coeff].toList
+                nsampled.clearTranslationZ()
+                nsampled.addAllTranslationZ(zs)
+                nclip.sampledTransform = nsampled
+                nclips.add(nclip)
+            }
+            nanim.clearClips()
+            nanim.addAllClips(nclips.map[it.build()])
+            nanims.add(nanim)
+        }
+        data.clearAnimationsKf()
+        data.addAllAnimationsKf(nanims.map[it.build()])
 	}
 
     static def mult(Vec3 v3, float coeff) {	
