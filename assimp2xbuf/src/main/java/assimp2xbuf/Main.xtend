@@ -10,15 +10,14 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 import java.util.List
-import xbuf.Datas.Bone
 import xbuf.Datas.Data
-import xbuf.Datas.Skeleton
-import xbuf.Datas.TObject
-import xbuf.Datas.Vec3
-import xbuf_ext.AnimationsKf
+import xbuf.Primitives.Vec3
+import xbuf.Skeletons.Bone
+import xbuf.Skeletons.Skeleton
+import xbuf.Tobjects.TObject
+import xbuf_ext.AnimationsKf.AnimationKF
 
 import static assimp.aiPostProcessSteps.*
-import xbuf_ext.AnimationsKf.AnimationKF
 
 class Main {
     static def main(String[] args) {
@@ -153,7 +152,7 @@ class Main {
             System.out.printf("nb relations:     %s\n", out.relationsCount);
             System.out.printf("nb skeletons:     %s\n", out.skeletonsCount);
             System.out.printf("nb tobjects:      %s\n", out.tobjectsCount);
-            System.out.printf("nb animationKfs:  %s\n", out.getExtension(AnimationsKf.animationsKf).size);
+            System.out.printf("nb animationKfs:  %s\n", out.animationsKfCount);
             System.out.printf("output file:      %s\n", outputFile)
             System.out.printf("output dir:       %s\n", outputDir)
 		}
@@ -162,7 +161,7 @@ class Main {
     static def linkAnimationsToSkeleton(Data.Builder data, Exporter exporter) {
         if (data.skeletonsCount == 1) {
             val skeleton = data.getSkeletons(0)
-            for (anim: data.getExtension(AnimationsKf.animationsKf)) {
+            for (anim: data.animationsKfList) {
                 //TODO check if animation is compatible with skeleton
                 data.addRelations(exporter.newRelation(AnimationKF, anim.id, Skeleton, skeleton.id, null))
             }

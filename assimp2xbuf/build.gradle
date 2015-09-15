@@ -14,10 +14,10 @@ def description = "A convert to xbuf that use assimp to read asset files"
 dependencies {
 	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.8.+'
 	compile project(':assimp4java')
-	compile 'org.xbuf:xbuf:0+'
+	compile 'org.xbuf:xbuf:0.7+'
 	compile 'com.beust:jcommander:1.35' //optional provided ?
-    //compile 'org.joml:joml-mini:1.4.0'
-    //compile 'org.joml:joml:1.4.0'
+    compile 'org.joml:joml-mini:1.6.0'
+    //compile 'org.joml:joml:1.6.0'
 	compile 'org.slf4j:slf4j-api:1.7.7'
 	runtime 'ch.qos.logback:logback-classic:1.1.2'
 	testCompile 'junit:junit:4.12'

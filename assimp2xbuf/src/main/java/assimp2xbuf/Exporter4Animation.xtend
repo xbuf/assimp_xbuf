@@ -11,7 +11,6 @@ import xbuf_ext.AnimationsKf.AnimationKF.TargetKind
 import xbuf_ext.AnimationsKf.Clip
 import xbuf_ext.AnimationsKf.SampledTransform
 import org.eclipse.xtend.lib.annotations.Data
-import xbuf_ext.AnimationsKf
 
 class Exporter4Animation {
     def void exportAnimations(ResultsTmp resTmp, aiScene scene) {
@@ -71,7 +70,7 @@ class Exporter4Animation {
             }
             if (adest.clipsCount > 0) {
                 //resTmp.out.getExtension(AnimationsKf.animationsKf).add(adest.build())
-                resTmp.out.addExtension(AnimationsKf.animationsKf, adest.build())
+                resTmp.out.addAnimationsKf(adest.build())
             }
         }
     }
