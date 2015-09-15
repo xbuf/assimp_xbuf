@@ -120,8 +120,9 @@ class Exporter {
 	def export(ResultsTmp resTmp, aiScene scene) {
         exportMaterials(resTmp, scene)
         val nodeNameSkeletons = exportSkeletons(resTmp, scene)
-        exportMeshes(resTmp, scene)
+        exportMeshesPart1(resTmp, scene)
 	    exportNodes(resTmp, scene, scene.mRootNode(), nodeNameSkeletons)
+        exportMeshesPart2(resTmp)
 	    resTmp
 	}
 
@@ -168,7 +169,7 @@ class Exporter {
         obj.id
     }
 
-    def exportMeshes(ResultsTmp resTmp, aiScene scene) {
+    def exportMeshesPart1(ResultsTmp resTmp, aiScene scene) {
         if (!scene.HasMeshes()) return;
         for(var i =  scene.mNumMeshes - 1; i >= 0; i--){
             val m = scene.mMeshes.get(aiMesh, i)
@@ -217,10 +218,15 @@ class Exporter {
             val boneInfluences = extractBonesInfluences(m)
             log.debug("prepare skin of mesh #{}, with nb boneInfluences : {}", i, boneInfluences.size)
             resTmp.skins.put(i, boneInfluences)
-            resTmp.out.addMeshes(mdest)
             resTmp.out.addRelations(newRelation(Material, findMaterialId(m.mMaterialIndex), Mesh, mdest.id, null))
         }
     }
+    
+    def exportMeshesPart2(ResultsTmp resTmp) {
+    	for(m: resTmp.meshes.values) {
+            resTmp.out.addMeshes(m)
+    	}
+	}
 
     def VertexArray.Builder addVertexArrayV3(Mesh.Builder mdest, VertexArray.Attrib attrib, aiVector3D list, int length) {
         val lg = if (length == -1) list.limit else length
@@ -543,9 +549,9 @@ class Exporter {
     }
 
     def setupSkinOnMeshes(aiNode node, Map<String, Integer> boneIndexes, ResultsTmp resTmp) {
-        log.debug("try to setupSkins for nb mesh : {}", node.mNumMeshes)       
+        log.debug("try to setupSkins for nb mesh : {} / {}", node.mNumMeshes, resTmp.skins.size)       
         for (var i = 0; i < node.mNumMeshes; i++) {
-            val numMesh = node.mMeshes.position(i)
+            val numMesh = node.mMeshes.get(i)
             val mesh = resTmp.meshes.get(numMesh)
             val boneInfluences = resTmp.skins.get(numMesh)
             if (boneInfluences != null && boneInfluences.size > 0) {
@@ -566,8 +572,10 @@ class Exporter {
                             skin.addBoneWeight(influence.weight)
                         }
                     }
-                    mesh.skin = skin 
+                    mesh.skin = skin
                 }
+            } else {
+                log.debug("no skin on mesh : {} ({})", mesh.id, numMesh)
             }
         }
     }
