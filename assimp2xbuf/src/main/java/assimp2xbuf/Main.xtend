@@ -7,35 +7,33 @@ import com.beust.jcommander.ParameterException
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
 import java.util.List
 import xbuf.Datas.Data
-import xbuf.Primitives.Vec3
-import xbuf.Skeletons.Bone
 import xbuf.Skeletons.Skeleton
-import xbuf.Tobjects.TObject
 import xbuf_ext.AnimationsKf.AnimationKF
+import xbuf_tools.AABBTools
+import xbuf_tools.DataTools
 
 import static assimp.aiPostProcessSteps.*
-import xbuf_ext.AnimationsKf.Clip
-import xbuf_ext.AnimationsKf.SampledTransform
 
 class Main {
     static def main(String[] args) {
         var args0 = args
         if (args.isEmpty) {
-            //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models/Collada/duck.dae"
-            args0 = #[
-                System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
-                //,System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5anim"
-            ]
+            //args0 = #["--height", "0.2", System.getProperty("user.home") + "/work/xbuf/samples2/assimp/models/Collada/duck.dae"
+//            args0 = #[
+//            	"--height", "1.7"
+//                ,System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5mesh"
+//                //,System.getProperty("user.home") + "/work/xbuf/samples/assimp/models-nonbsd/MD5/Bob.md5anim"
+//            ]
             //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.fbx"
             //args0 = #[System.getProperty("user.home") + "/work/xbuf/samples/bitgem/micro_bat_lp/models/micro_bat_mobile.dae"
     
-            //val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
-            //args0 = #[doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
-            //val inputDir = FileSystems.getDefault().getPath(doom3Root)
+            val doom3Root = System.getProperty("user.home") + "/work/xbuf/samples/doom3"
+            args0 = #["--height", "2.7"
+            	,"--inputdir", doom3Root
+            	, doom3Root + "/models/md5/monsters/hellknight/hellknight.md5mesh"
+           	]
         }        
         val options = new Options()
         val jc = new JCommander(options)
@@ -58,19 +56,22 @@ class Main {
 
     static class Options {
         @Parameter(names = #["-h", "-?", "--help"], help = true)
-        private var boolean help;
+        private var boolean help
 
         @Parameter(description = "input files")
-        private var List<String> inputFiles = new ArrayList<String>();
+        private var List<String> inputFiles = new ArrayList<String>()
 
-        @Parameter(names=#["--inputdirs"], description = "input directories for additional files(eg texture, sound, ...)")
-        private var List<String> inputDirs = new ArrayList<String>();
+        @Parameter(names=#["--inputdir"], description = "input directory for additional files(eg texture, sound, ...)")
+        private var List<String> inputDirs = new ArrayList<String>()
 
         @Parameter(names = #["--outputfile", "-o"], description = "output xbuf file")
-        private var String outputFile = "";
+        private var String outputFile = ""
 
         @Parameter(names = #["--outputdir","-d"], description = "output directory for non-xbuf files (eg images)")
-        private var String outputDir = System.getProperty("user.dir");
+        private var String outputDir = System.getProperty("user.dir")
+
+        @Parameter(names = #["--height"], description = "height of the models in meters (the unit of xbuf)")
+        private var float height = 1.0f
     }
     
 	def static void run(Options options) {
@@ -144,7 +145,10 @@ class Main {
 				new AssetPath(rpath, outputDir.resolve(rpath))
 			]
 			val out = scenes.fold(Data.newBuilder())[acc, scene| exporter.export(scene, acc)]
-			rescale(out, 0.05f)
+			val aabb = DataTools.aabbAll(out)
+			val coeff = options.height / AABBTools.dimension(aabb).y
+			//val coeff = 0.05f
+			DataTools.rescale(out, coeff)
 			linkAnimationsToSkeleton(out, exporter)
 			val output = Files.newOutputStream(outputFile)
 			out.build().writeTo(output)
@@ -155,6 +159,7 @@ class Main {
             System.out.printf("nb skeletons:     %s\n", out.skeletonsCount);
             System.out.printf("nb tobjects:      %s\n", out.tobjectsCount);
             System.out.printf("nb animationKfs:  %s\n", out.animationsKfCount);
+            System.out.printf("rescale coeff:    %s (%s -> %s)\n", coeff, AABBTools.dimension(aabb).y, options.height);
             System.out.printf("output file:      %s\n", outputFile)
             System.out.printf("output dir:       %s\n", outputDir)
 		}
@@ -168,80 +173,5 @@ class Main {
                 data.addRelations(exporter.newRelation(AnimationKF, anim.id, Skeleton, skeleton.id, null))
             }
         }
-    }
-	static def rescale(Data.Builder data, float coeff) {
-	    val tobjects = new HashMap<String, TObject.Builder>()
-	    val leafIds = new HashSet<String>()
-	    for(tobj: data.tobjectsList) {
-	        val nobj = TObject.newBuilder(tobj)
-	        nobj.transformBuilder.translation = mult(nobj.transformBuilder.translation, coeff)
-	        tobjects.put(nobj.id, nobj)
-	        leafIds.add(nobj.id)
-	    }
-	    for(rel: data.relationsList) {
-	        if (leafIds.contains(rel.ref1)) {
-    	        val ref1IsParent = tobjects.containsKey(rel.ref1) && tobjects.containsKey(rel.ref2)
-    	        if (ref1IsParent) leafIds.remove(rel.ref1)
-    	    }
-	    }
-	    for(leafId: leafIds) {
-	        val nobj = tobjects.get(leafId)
-	        nobj.transformBuilder.scale = mult(nobj.transformBuilder.scale, coeff)
-	    }
-	    data.clearTobjects()
-	    data.addAllTobjects(tobjects.values.map[it.build()])
-	    //data.tobjectsList.clear()
-	    //data.tobjectsBuilderList = tobjects.values.toList
-	    //data.tobjectsBuilderList.addAll(tobjects.values)
-	    
-        val nskeletons = new ArrayList<Skeleton.Builder>(data.skeletonsCount)
-        for(skeleton: data.skeletonsList) {
-            val nskeleton = Skeleton.newBuilder(skeleton)
-            val nbones = new ArrayList<Bone.Builder>(skeleton.bonesCount)
-            for(bone: skeleton.bonesList) {
-                val nbone = Bone.newBuilder(bone)
-                nbone.transformBuilder.translation = mult(nbone.transformBuilder.translation, coeff)
-                nbones.add(nbone)
-            }
-            nskeleton.clearBones()
-            nskeleton.addAllBones(nbones.map[it.build()])
-            nskeletons.add(nskeleton)
-        }
-        data.clearSkeletons()
-        data.addAllSkeletons(nskeletons.map[it.build()])
-
-        val nanims = new ArrayList<AnimationKF.Builder>(data.animationsKfCount)
-        for(anim: data.animationsKfList) {
-            val nanim = AnimationKF.newBuilder(anim)
-            val nclips = new ArrayList<Clip.Builder>(anim.clipsCount)
-            for(clip: anim.clipsList) {
-                val nclip = Clip.newBuilder(clip)
-                val nsampled = SampledTransform.newBuilder(clip.sampledTransform)
-                val xs = nsampled.translationXList.map[v|v * coeff].toList
-                nsampled.clearTranslationX()
-                nsampled.addAllTranslationX(xs)
-                val ys = nsampled.translationYList.map[v|v * coeff].toList
-                nsampled.clearTranslationY()
-                nsampled.addAllTranslationY(ys)
-                val zs = nsampled.translationZList.map[v|v * coeff].toList
-                nsampled.clearTranslationZ()
-                nsampled.addAllTranslationZ(zs)
-                nclip.sampledTransform = nsampled
-                nclips.add(nclip)
-            }
-            nanim.clearClips()
-            nanim.addAllClips(nclips.map[it.build()])
-            nanims.add(nanim)
-        }
-        data.clearAnimationsKf()
-        data.addAllAnimationsKf(nanims.map[it.build()])
-	}
-
-    static def mult(Vec3 v3, float coeff) {	
-        val nv3 = Vec3.newBuilder()
-        nv3.x = v3.x * coeff
-        nv3.y = v3.y * coeff
-        nv3.z = v3.z * coeff
-        nv3
     }
 }
