@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/xbuf/assimp_xbuf.svg?branch=master)](https://travis-ci.org/xbuf/assimp_xbuf)
+
 WIP WIP WIP
 
 
