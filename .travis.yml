@@ -1,0 +1,11 @@
+sudo: false
+language: java
+env:
+  - GRADLE_USER_HOME=gradle-cache
+cache:
+  directories:
+    - gradle-cache
+jdk:
+  - oraclejdk7
+after_success:
+  - '[ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && ./gradlew bintrayUpload || :'

@@ -3,9 +3,9 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.6'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
 		classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
-		classpath "org.xtend:xtend-gradle-plugin:0.3.4"
+		classpath "org.xtext:xtext-gradle-plugin:1.0.15"
 	}
 }
 allprojects {
