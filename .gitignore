@@ -24,3 +24,8 @@ bin
 
 # crash
 hs_err_pid*.log
+
+# samples
+*.xbuf
+*.tga
+*.png
