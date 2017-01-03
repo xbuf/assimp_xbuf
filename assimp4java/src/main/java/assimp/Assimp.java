@@ -4,10 +4,10 @@ import org.bytedeco.javacpp.*;
 import org.bytedeco.javacpp.annotation.*;
 
 @Properties({
-	@Platform(value="linux-x86_64", include="javacpp-code.h", link = "assimp"),
-	@Platform(value="windows-x86_64", include="javacpp-code.h", link = "assimp"),
-	@Platform(value="windows-x86_32", include="javacpp-code.h", link = "assimp"),
-	@Platform(value="macosx-x86_64", include="javacpp-code.h", link = "assimp")
+	@Platform(value="linux-x86_64", include="javacpp-code.h"),// link = "assimp"),
+	@Platform(value="windows-x86_64", include="javacpp-code.h"),// link = "assimp"),
+	@Platform(value="windows-x86_32", include="javacpp-code.h"),// link = "assimp"),
+	@Platform(value="macosx-x86_64", include="javacpp-code.h"),// link = "assimp")
 })
 // "link" tells javacpp which original library should be linked (if not specified, "Abc" will be used)
 public class Assimp {
