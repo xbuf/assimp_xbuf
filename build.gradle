@@ -10,8 +10,10 @@ buildscript {
 }
 allprojects {
 	group = "org.xbuf"
-	version = "0.1.0"
 	def description = 'bridges between assimp and xbuf'
+	project.version = "git describe --always --dirty".execute().text.trim()
+	println("version : '${project.version}' (${bintray_api_key.length() > 0} && ${project.version ==~ /(\d+)\.(\d+)\.(\d+)/})")
+	
 }
 
 subprojects {
@@ -83,4 +85,10 @@ subprojects {
 			}
 		}
 	}
+
+	bintrayUpload.onlyIf {
+		(bintray_api_key.length() > 0) &&
+		(project.version ==~ /(\d+)\.(\d+)\.(\d+)/)
+	}
+	
 }
